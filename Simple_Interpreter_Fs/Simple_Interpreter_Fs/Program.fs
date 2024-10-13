@@ -49,13 +49,13 @@ let getInputString() : string =
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | "^" <NR> <Topt | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
-// <E>      ::= <T> <Eopt>
-// <Eopt>     ::= "+" <T> <Eopt> | "-" <Term> <Eopt> | <empty>
-// <T>      ::= <F> <Topt>
+// <E>        ::= <T> <Eopt>
+// <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
+// <T>        ::= <F> <Topt>
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> | <empty>
-// <F>     ::= <NR> <Fopt>
-// <Fopt>    ::= "^" <Fopt> <NR> | "%" <Fopt> <NR> | <empty> 
-// <NR>   ::= "Num" <value> | "(" <E> ")"
+// <F>        ::= <NR> <Fopt>
+// <Fopt>     ::= "^" <NR> <Fopt> | "%" <NR> <Fopt> | <empty> 
+// <NR>       ::= "Num" <value> | "(" <E> ")"
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
@@ -63,13 +63,17 @@ let parser tList =
         | Add :: tail -> (T >> Eopt) tail
         | Sub :: tail -> (T >> Eopt) tail
         | _ -> tList
-    and T tList = (NR >> Topt) tList
+    and T tList = (F >> Topt) tList
     and Topt tList =
         match tList with
-        | Mul :: tail -> (NR >> Topt) tail
-        | Div :: tail -> (NR >> Topt) tail
-        | Rem :: tail -> (NR >> Topt) tail
-        | Pow :: tail -> (NR >> Topt) tail
+        | Mul :: tail -> (F >> Topt) tail
+        | Div :: tail -> (F >> Topt) tail
+        | Rem :: tail -> (F >> Topt) tail
+        | _ -> tList
+    and F tList = (NR >> Fopt) tList
+    and Fopt tList =
+        match tList with
+        | Pow :: tail -> (NR >> Fopt) tail
         | _ -> tList
     and NR tList =
         match tList with 
@@ -89,15 +93,19 @@ let parseNeval tList =
         | Sub :: tail -> let (tLst, tval) = T tail
                          Eopt (tLst, value - tval)
         | _ -> (tList, value)
-    and T tList = (NR >> Topt) tList
+    and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
-        | Mul :: tail -> let (tLst, tval) = NR tail
+        | Mul :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value * tval)
-        | Div :: tail -> let (tLst, tval) = NR tail
+        | Div :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value / tval)
-        | Rem :: tail -> let (tLst, tval) = NR tail
+        | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
+        | _ -> (tList, value)
+    and F tList = (NR >> Fopt) tList
+    and Fopt (tList, value) =
+        match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
                          Topt (tLst, pown value tval)
         | _ -> (tList, value)
