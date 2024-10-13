@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Lpar | Rpar | Num of int
+    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Num of int
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -28,6 +28,8 @@ let lexer input =
         | '-'::tail -> Sub :: scan tail
         | '*'::tail -> Mul :: scan tail
         | '/'::tail -> Div :: scan tail
+        | '%'::tail -> Rem :: scan tail
+        | '^'::tail -> Pow :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | c :: tail when isblank c -> scan tail
@@ -44,7 +46,7 @@ let getInputString() : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | "^" <NR> <Topt | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList = 
@@ -59,6 +61,8 @@ let parser tList =
         match tList with
         | Mul :: tail -> (NR >> Topt) tail
         | Div :: tail -> (NR >> Topt) tail
+        | Rem :: tail -> (NR >> Topt) tail
+        | Pow :: tail -> (NR >> Topt) tail
         | _ -> tList
     and NR tList =
         match tList with 
@@ -85,6 +89,10 @@ let parseNeval tList =
                          Topt (tLst, value * tval)
         | Div :: tail -> let (tLst, tval) = NR tail
                          Topt (tLst, value / tval)
+        | Rem :: tail -> let (tLst, tval) = NR tail
+                         Topt (tLst, value % tval)
+        | Pow :: tail -> let (tLst, tval) = NR tail
+                         Topt (tLst, pown value tval)
         | _ -> (tList, value)
     and NR tList =
         match tList with 
