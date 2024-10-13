@@ -49,6 +49,13 @@ let getInputString() : string =
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | "^" <NR> <Topt | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
+// <E>      ::= <T> <Eopt>
+// <Eopt>     ::= "+" <T> <Eopt> | "-" <Term> <Eopt> | <empty>
+// <T>      ::= <F> <Topt>
+// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> | <empty>
+// <F>     ::= <NR> <Fopt>
+// <Fopt>    ::= "^" <Fopt> <NR> | "%" <Fopt> <NR> | <empty> 
+// <NR>   ::= "Num" <value> | "(" <E> ")"
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
