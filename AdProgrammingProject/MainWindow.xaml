@@ -7,6 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="36">Graphical Calculator</TextBlock>
+        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="Enter an expression" HorizontalAlignment="Left" VerticalAlignment="Top" Width="500" Height="50" Margin="150,64,0,0"/>
+        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="Result" IsReadOnly="True" HorizontalAlignment="Left" VerticalAlignment="Top" Width="500" Height="50" Margin="150,132,0,0"></TextBox>
+
 
     </Grid>
 </Window>
