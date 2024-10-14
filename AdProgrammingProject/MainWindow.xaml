@@ -15,10 +15,10 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="36">Graphical Calculator</TextBlock>
-        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="Enter an expression" HorizontalAlignment="Left" VerticalAlignment="Top" Width="500" Height="50" Margin="150,64,0,0"/>
-        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="Result" IsReadOnly="True" HorizontalAlignment="Left" VerticalAlignment="Top" Width="500" Height="50" Margin="150,132,0,0"></TextBox>
-
+        <TextBlock Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="32">Graphical Calculator</TextBlock>
+        <TextBox Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="Enter an expression" HorizontalAlignment="Left" VerticalAlignment="Top" Width="500" Height="40" Margin="30,50,0,0" FontSize="16" TextAlignment="Right" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Column="1" Grid.Row="0" Text="Result" IsReadOnly="True" HorizontalAlignment="Left" VerticalAlignment="Top" Width="200" Height="40" Margin="170,50,0,0" FontSize="16" TextAlignment="Right" VerticalContentAlignment="Center"/>
+        
 
     </Grid>
 </Window>
