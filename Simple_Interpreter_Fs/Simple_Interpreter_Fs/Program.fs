@@ -43,12 +43,16 @@ let getInputString() : string =
     Console.ReadLine()
 
 // Grammar in BNF:
+
+// old
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | "^" <NR> <Topt | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
+
+// new
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
