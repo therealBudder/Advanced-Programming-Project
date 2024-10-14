@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35327.3
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30104.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Simple_Interpreter_Fs", "Simple_Interpreter_Fs\Simple_Interpreter_Fs.fsproj", "{A7048F70-C888-4BC9-A3EB-594E3103B53E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdProgrammingProject", "..\AdProgrammingProject\AdProgrammingProject.csproj", "{F98E216E-5CDE-4090-914A-F32EA48E0912}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F98E216E-5CDE-4090-914A-F32EA48E0912}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F98E216E-5CDE-4090-914A-F32EA48E0912}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F98E216E-5CDE-4090-914A-F32EA48E0912}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F98E216E-5CDE-4090-914A-F32EA48E0912}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
