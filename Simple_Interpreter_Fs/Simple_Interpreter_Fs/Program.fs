@@ -6,18 +6,30 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Num of int
+    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Dec | Num of int | Flt of float
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
 let lexError = System.Exception("Lexer error")
 let intVal (c:char) = (int)((int)c - (int)'0')
+let floatVal (c:char) = (float)((int)c - (int)'0')
 let parseError = System.Exception("Parser error")
 
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
+    | _ -> (iStr, iVal)
+
+let rec scFloat(iStr, iVal) =
+    match iStr with
+    '.' :: c :: tail when isdigit c -> scFrac(c :: tail, iVal)
+    | c :: tail when isdigit c -> scFloat(tail, 10.0*iVal+(floatVal c))
+    | _ -> (iStr, iVal)
+and scFrac(iStr, iVal) =
+    match iStr with
+    c :: tail when isdigit c ->
+        scFrac(tail, 0.1*iVal+(floatVal c))
     | _ -> (iStr, iVal)
 
 let lexer input = 
@@ -33,8 +45,12 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | c :: tail when isblank c -> scan tail
-        | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c) 
-                                      Num iVal :: scan iStr
+        | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
+                                      match iStr with
+                                      | '.' :: c :: iStr when isdigit c -> let (iStr, iVal) = scFrac(iStr, (float)iVal + 0.1 * floatVal c)
+                                                                           Flt iVal :: scan iStr
+                                      | _ -> Num iVal :: scan iStr
+                                      // Num iVal :: scan iStr
         | _ -> raise lexError
     scan (str2lst input)
 
@@ -48,7 +64,7 @@ let getInputString() : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | "^" <NR> <Topt | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 
@@ -59,7 +75,7 @@ let getInputString() : string =
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> |<empty>
 // <F>        ::= <NR> <Fopt>
 // <Fopt>     ::= "^" <NR> <Fopt> | <empty> 
-// <NR>       ::= "Num" <value> | "(" <E> ")"
+// <NR>       ::= "Num" <value> | "Flt" <value> | "(" <E> ")"
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
@@ -82,6 +98,7 @@ let parser tList =
     and NR tList =
         match tList with 
         | Num value :: tail -> tail
+        | Flt value :: tail -> tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
                           | _ -> raise parseError
@@ -111,11 +128,12 @@ let parseNeval tList =
     and Fopt (tList, value) =
         match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
-                         Topt (tLst, pown value tval)
+                         Topt (tLst, Math.Pow(value, tval))
         | _ -> (tList, value)
     and NR tList =
         match tList with 
-        | Num value :: tail -> (tail, value)
+        | Num value :: tail -> (tail, (float)value)
+        | Flt value :: tail -> (tail, value)
         | Lpar :: tail -> let (tLst, tval) = E tail
                           match tLst with 
                           | Rpar :: tail -> (tail, tval)
