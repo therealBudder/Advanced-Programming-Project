@@ -12,10 +12,12 @@ type terminal =
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
+let isZero c = if c = 0 then true else false
 let lexError = System.Exception("Lexer error")
 let intVal (c:char) = (int)((int)c - (int)'0')
 let floatVal (c:char) = (float)((int)c - (int)'0')
 let parseError = System.Exception("Parser error")
+let divisonByZeroError = System.Exception("Division by Zero")
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -119,7 +121,7 @@ let parseNeval tList =
         | Mul :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value * tval)
         | Div :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, value / tval)
+                         if isZero tval = false then Topt (tLst, value / tval) else raise divisonByZeroError
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
         | _ -> (tList, value)
@@ -130,7 +132,7 @@ let parseNeval tList =
                          Fopt (tLst, Math.Pow(value, tval))
         | UnaryM :: tail -> let (tLst, tval) = NR tail
                             Fopt (tLst, (-1.0 * tval)) 
-        | _ -> (tList, value)
+        | _ -> (tList,(int) value)
     and NR tList =
         match tList with 
         | Num value :: tail -> (tail, (float)value)
