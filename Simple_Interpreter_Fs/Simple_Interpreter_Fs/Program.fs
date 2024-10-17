@@ -21,15 +21,10 @@ let rec scInt(iStr, iVal) =
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
     | _ -> (iStr, iVal)
 
-let rec scFloat(iStr, iVal) =
-    match iStr with
-    '.' :: c :: tail when isdigit c -> scFrac(c :: tail, iVal, 0.1)
-    | c :: tail when isdigit c -> scFloat(tail, 10.0*iVal+(floatVal c))
-    | _ -> (iStr, iVal)
-and scFrac(iStr, iVal, weight) =
+and scFloat(iStr, iVal, weight) =
     match iStr with
     c :: tail when isdigit c ->
-        scFrac(tail, iVal + weight * floatVal c, weight / 10.0)
+        scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
 
 let lexer input = 
@@ -47,7 +42,7 @@ let lexer input =
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
-                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFrac(c :: tail, (float)iVal, 0.1)
+                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Flt iVal :: scan iStr
                                       | _ -> Num iVal :: scan iStr
                                       // Num iVal :: scan iStr
