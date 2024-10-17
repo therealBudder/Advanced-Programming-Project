@@ -23,13 +23,13 @@ let rec scInt(iStr, iVal) =
 
 let rec scFloat(iStr, iVal) =
     match iStr with
-    '.' :: c :: tail when isdigit c -> scFrac(c :: tail, iVal)
+    '.' :: c :: tail when isdigit c -> scFrac(c :: tail, iVal, 0.1)
     | c :: tail when isdigit c -> scFloat(tail, 10.0*iVal+(floatVal c))
     | _ -> (iStr, iVal)
-and scFrac(iStr, iVal) =
+and scFrac(iStr, iVal, weight) =
     match iStr with
     c :: tail when isdigit c ->
-        scFrac(tail, 0.1*iVal+(floatVal c))
+        scFrac(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
 
 let lexer input = 
@@ -47,7 +47,7 @@ let lexer input =
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
-                                      | '.' :: c :: iStr when isdigit c -> let (iStr, iVal) = scFrac(iStr, (float)iVal + 0.1 * floatVal c)
+                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFrac(c :: tail, (float)iVal, 0.1)
                                                                            Flt iVal :: scan iStr
                                       | _ -> Num iVal :: scan iStr
                                       // Num iVal :: scan iStr
@@ -67,7 +67,6 @@ let getInputString() : string =
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
-
 // new
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
@@ -76,6 +75,7 @@ let getInputString() : string =
 // <F>        ::= <NR> <Fopt>
 // <Fopt>     ::= "^" <NR> <Fopt> | <empty> 
 // <NR>       ::= "Num" <value> | "Flt" <value> | "(" <E> ")"
+
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
