@@ -46,9 +46,7 @@ let lexer input =
                                                                            Flt iVal :: scan iStr
                                       | _ -> Num iVal :: scan iStr
                                       // Num iVal :: scan iStr
-        | _ ->
-            // Console.WriteLine(input)
-            raise lexError
+        | _ -> raise lexError
     scan (str2lst input)
 
 let getInputString() : string = 
@@ -86,8 +84,6 @@ let parser tList =
         | _ -> tList
     and NR tList =
         match tList with
-        // | Sub :: Num value :: tail -> tail
-        // | Sub :: Flt value :: tail -> tail
         | Sub :: tail -> tail
         | Num value :: tail -> tail
         | Flt value :: tail -> tail
@@ -124,8 +120,6 @@ let parseNeval tList =
         | _ -> (tList, value)
     and NR tList =
         match tList with
-        // | Sub :: Num value :: tail -> (tail, -(float)value)
-        // | Sub :: Flt value :: tail -> (tail, -value)
         | Sub :: tail -> let (tLst, tval) = NR tail
                          (tLst, -tval)
         | Num value :: tail -> (tail, (float)value)
