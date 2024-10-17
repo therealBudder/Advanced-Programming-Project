@@ -6,7 +6,8 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Dec | Num of int | Flt of float
+    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar  | UnaryM | Dec | Num of int | Flt of float
+
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -15,7 +16,6 @@ let lexError = System.Exception("Lexer error")
 let intVal (c:char) = (int)((int)c - (int)'0')
 let floatVal (c:char) = (float)((int)c - (int)'0')
 let parseError = System.Exception("Parser error")
-
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -31,6 +31,7 @@ let lexer input =
     let rec scan input =
         match input with
         | [] -> []
+        | ' '::'-'::tail -> UnaryM :: scan tail
         | '+'::tail -> Add :: scan tail
         | '-'::tail -> Sub :: scan tail
         | '*'::tail -> Mul :: scan tail
@@ -55,21 +56,23 @@ let getInputString() : string =
 
 // Grammar in BNF:
 
-// old
+// version 0
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
-// new
+
+// version 1
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> |<empty>
 // <F>        ::= <NR> <Fopt>
-// <Fopt>     ::= "^" <NR> <Fopt> | <empty> 
+// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> |<empty> 
 // <NR>       ::= "Num" <value> | "Flt" <value> | "(" <E> ")"
+
 
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
@@ -89,6 +92,7 @@ let parser tList =
     and Fopt tList =
         match tList with
         | Pow :: tail -> (NR >> Fopt) tail
+        | UnaryM :: tail -> (NR >> Fopt) tail
         | _ -> tList
     and NR tList =
         match tList with 
@@ -123,7 +127,9 @@ let parseNeval tList =
     and Fopt (tList, value) =
         match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
-                         Topt (tLst, Math.Pow(value, tval))
+                         Fopt (tLst, Math.Pow(value, tval))
+        | UnaryM :: tail -> let (tLst, tval) = NR tail
+                            Fopt (tLst, (-1.0 * tval)) 
         | _ -> (tList, value)
     and NR tList =
         match tList with 
