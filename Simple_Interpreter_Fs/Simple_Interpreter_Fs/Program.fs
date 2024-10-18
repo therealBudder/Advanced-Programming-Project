@@ -141,7 +141,29 @@ let rec printTList (lst:list<terminal>) : list<string> =
     | [] -> Console.Write("EOL\n")
             []
 
-
+let testFunctionInt input correctOut =
+    let oList = lexer input
+    let out = parseNeval oList
+    printfn "input: %s, Correct Result: %d, Interpreter Out: %d" input correctOut (snd out)
+let testFunctionFloat input correctOut =
+    let oList = lexer input
+    let out = parseNeval oList
+    printfn "input: %s, Correct Result: %f, Interpreter Out: %d" input correctOut (snd out)
+    
+let testInputs =
+    printfn "Tests Start"
+    testFunctionInt "2+7" 9
+    testFunctionInt "15+987" 1002
+    testFunctionInt "9-2" 7
+    testFunctionInt "987-15" 972
+    testFunctionInt "2*7" 14
+    testFunctionInt "15*987" 14580
+    testFunctionInt "8/2" 4
+    testFunctionInt "987/3" 329
+    testFunctionFloat "1156.55+1.2" 1157.75
+    testFunctionFloat "9/4" 2.25
+    printfn "Tests Finished"
+    
 [<EntryPoint>]
 let main argv  =
     Console.WriteLine("Simple Interpreter")
@@ -151,4 +173,5 @@ let main argv  =
     let pList = printTList (parser oList)
     let Out = parseNeval oList
     Console.WriteLine("Result = {0}", snd Out)
+    testInputs
     0
