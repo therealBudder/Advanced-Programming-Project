@@ -143,11 +143,11 @@ let rec printTList (lst:list<terminal>) : list<string> =
 let testFunctionInt input correctOut =
     let oList = lexer input
     let out = parseNeval oList
-    printfn "input: %s, Correct Result: %d, Interpreter Out: %d" input correctOut (snd out)
+    printfn "input: %s, Correct Result: %d, Interpreter Out: %f" input correctOut (snd out)
 let testFunctionFloat input correctOut =
     let oList = lexer input
     let out = parseNeval oList
-    printfn "input: %s, Correct Result: %f, Interpreter Out: %d" input correctOut (snd out)
+    printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
     
 let testInputs =
     printfn "Tests Start"
@@ -162,6 +162,7 @@ let testInputs =
     testFunctionFloat "1156.55+1.2" 1157.75
     testFunctionFloat "9/4" 2.25
     printfn "Tests Finished"
+    
     
 [<EntryPoint>]
 let main argv  =
