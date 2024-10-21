@@ -5,10 +5,6 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Simple_Interpreter_Fs", "Simple_Interpreter_Fs\Simple_Interpreter_Fs.fsproj", "{A7048F70-C888-4BC9-A3EB-594E3103B53E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdProgrammingGUIAvalonia", "..\AdProgrammingGUIAvalonia\AdProgrammingGUIAvalonia.csproj", "{0C26E372-A98B-49D3-978D-D3B71E4101CF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdProgrammingGUIAvalonia.Desktop", "..\AdProgrammingGUIAvalonia.Desktop\AdProgrammingGUIAvalonia.Desktop.csproj", "{D240AE68-B02F-4B6C-8B2B-0C10BC03CB22}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,14 +15,6 @@ Global
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7048F70-C888-4BC9-A3EB-594E3103B53E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0C26E372-A98B-49D3-978D-D3B71E4101CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0C26E372-A98B-49D3-978D-D3B71E4101CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0C26E372-A98B-49D3-978D-D3B71E4101CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0C26E372-A98B-49D3-978D-D3B71E4101CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D240AE68-B02F-4B6C-8B2B-0C10BC03CB22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D240AE68-B02F-4B6C-8B2B-0C10BC03CB22}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D240AE68-B02F-4B6C-8B2B-0C10BC03CB22}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D240AE68-B02F-4B6C-8B2B-0C10BC03CB22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
