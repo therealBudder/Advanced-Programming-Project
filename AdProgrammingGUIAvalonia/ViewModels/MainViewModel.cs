@@ -2,5 +2,7 @@
 
 public class MainViewModel : ViewModelBase
 {
-    public string Greeting => "Welcome to Avalonia!";
+    public string EquationInputText => "Enter equation";
+    public string ResultText => "Result";
+    public string HistoryText => "Awaiting results";
 }
