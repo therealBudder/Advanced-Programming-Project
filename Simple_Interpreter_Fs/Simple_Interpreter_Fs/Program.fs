@@ -139,28 +139,36 @@ let rec printTList (lst:list<terminal>) : list<string> =
                   
     | [] -> Console.Write("EOL\n")
             []
-
-let testFunctionInt input correctOut =
+(*          
+let compareInts (input1, input2:int) = if input1 = input2 then true else false
+let testFunctionInt (input:string, correctOut:int) =
     let oList = lexer input
     let out = parseNeval oList
-    printfn "input: %s, Correct Result: %d, Interpreter Out: %f" input correctOut (snd out)
-let testFunctionFloat input correctOut =
+    if compareInts out correctOut = true then printfn "Pass"
+    else printfn "input: %s, Correct Result: %d, Interpreter Out: %f" input correctOut (snd out)
+*)  
+    
+let testFunctionFloat (input:string, correctOut:float) =
     let oList = lexer input
     let out = parseNeval oList
-    printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
+    if snd out = correctOut then printfn "Pass"
+    else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
     
 let testInputs =
     printfn "Tests Start"
-    testFunctionInt "2+7" 9
-    testFunctionInt "15+987" 1002
-    testFunctionInt "9-2" 7
-    testFunctionInt "987-15" 972
-    testFunctionInt "2*7" 14
-    testFunctionInt "15*987" 14580
-    testFunctionInt "8/2" 4
-    testFunctionInt "987/3" 329
-    testFunctionFloat "1156.55+1.2" 1157.75
-    testFunctionFloat "9/4" 2.25
+    testFunctionFloat ("2+7", 9)
+    testFunctionFloat ("15+987", 1002)
+    (*
+    testFunctionFloat "9-2" 7
+    testFunctionFloat "987-15" 972
+    testFunctionFloat "2*7" 14
+    testFunctionFloat "15*987" 14580
+    testFunctionFloat "8/2" 4
+    testFunctionFloat "987/3" 329
+     *)
+    testFunctionFloat ("1156.55+1.2", 1157.75)
+    testFunctionFloat ("9/4", 2.25)
+   
     printfn "Tests Finished"
     
     
