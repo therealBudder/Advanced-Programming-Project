@@ -139,38 +139,27 @@ let rec printTList (lst:list<terminal>) : list<string> =
                   
     | [] -> Console.Write("EOL\n")
             []
-(*          
-let compareInts (input1, input2:int) = if input1 = input2 then true else false
-let testFunctionInt (input:string, correctOut:int) =
-    let oList = lexer input
-    let out = parseNeval oList
-    if compareInts out correctOut = true then printfn "Pass"
-    else printfn "input: %s, Correct Result: %d, Interpreter Out: %f" input correctOut (snd out)
-*)  
     
-let testFunctionFloat (input:string, correctOut:float) =
+let test (input:string, correctOut:float) =
     let oList = lexer input
     let out = parseNeval oList
-    if snd out = correctOut then printfn "Pass"
+    if snd out = correctOut then true
     else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
+         false
     
 let testInputs =
     printfn "Tests Start"
-    testFunctionFloat ("2+7", 9)
-    testFunctionFloat ("15+987", 1002)
-    (*
-    testFunctionFloat "9-2" 7
-    testFunctionFloat "987-15" 972
-    testFunctionFloat "2*7" 14
-    testFunctionFloat "15*987" 14580
-    testFunctionFloat "8/2" 4
-    testFunctionFloat "987/3" 329
-     *)
-    testFunctionFloat ("1156.55+1.2", 1157.75)
-    testFunctionFloat ("9/4", 2.25)
-   
-    printfn "Tests Finished"
-    
+    if
+        test ("15+987", 1002.0) &&
+        test ("987-15", 972.0) &&
+        test ("15*987", 14805.0) &&
+        test ("8/2", 4.0) &&
+        test ("987/3", 329.0) &&
+        test ("1156.55+1.2", 1157.75) &&
+        test ("9/4", 2.25)
+        then printfn "All tests passed"
+        else printfn "Some of the tests failed"
+        
     
 [<EntryPoint>]
 let main argv  =
