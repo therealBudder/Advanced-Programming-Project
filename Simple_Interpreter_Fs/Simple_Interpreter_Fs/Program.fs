@@ -6,14 +6,19 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float
+    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
-let lexError = System.Exception("Lexer error")
+let isletter c = System.Char.IsLetter c
+let isletterordigit c = System.Char.IsLetterOrDigit c
+
+let lexError = System.Exception("error: invalid symbol in expression")
+let varError = System.Exception("error: incorrect var assignment")
 let intVal (c:char) = (int)((int)c - (int)'0')
 let floatVal (c:char) = (float)((int)c - (int)'0')
+let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
 let divisionByZeroError = System.Exception("Division by Zero Detected")
 
@@ -28,6 +33,11 @@ and scFloat(iStr, iVal, weight) =
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
 
+let rec scStr(remain : list<char>, word : list<char>) =
+    match remain with
+    c :: tail when isletterordigit c -> scStr(tail, List.append word [c])
+    | _ -> (remain, word)
+
 let lexer input = 
     let rec scan input =
         match input with
@@ -40,13 +50,16 @@ let lexer input =
         | '^'::tail -> Pow :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
-        | c :: tail when isblank c -> scan tail
-        | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
-                                      match iStr with
-                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
-                                                                           Flt iVal :: scan iStr
-                                      | _ -> Num iVal :: scan iStr
-                                      // Num iVal :: scan iStr
+        | c :: tail when isblank c ->  scan tail
+        | c :: tail when isdigit c ->  let (iStr, iVal) = scInt(tail, intVal c)
+                                       match iStr with
+                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
+                                                                            Flt iVal :: scan iStr
+                                       | _ -> Num iVal :: scan iStr
+                                       // Num iVal :: scan iStr
+        | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, [c])
+                                       let out = (string)oStr
+                                       Var out :: scan iStr
         | _ -> raise lexError
     scan (str2lst input)
 
@@ -170,8 +183,11 @@ let main argv  =
     let input:string = getInputString()
     let oList = lexer input
     let sList = printTList oList;
-    let pList = printTList (parser oList)
-    let Out = parseNeval oList
-    Console.WriteLine("Result = {0}", snd Out)
-    testInputs
+    //let pList = printTList (parser oList)
+    //let Out = parseNeval oList
+    //Console.WriteLine("Result = {0}", snd Out)
+    //testInputs
+    Console.WriteLine(oList[0])
+
+    Console.ReadLine()
     0
