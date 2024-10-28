@@ -152,9 +152,9 @@ let parseNeval tList =
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
-        | Var name :: Assign :: tail -> Console.WriteLine(name)
-                                        variables <- variables.Add(name, snd (E tail))
-                                        (tail, 0)
+        | Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                        variables <- variables.Add(name, tVal)
+                                        (tail, tVal)
         | _ -> raise parseError
     E tList
 
