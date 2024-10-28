@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
     One for Windows with net8.0-windows TFM, one for MacOS with net8.0-macos and one with net8.0 TFM for Linux.-->
     <TargetFramework>net8.0</TargetFramework>
@@ -15,5 +15,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AdProgrammingGUIAvalonia\AdProgrammingGUIAvalonia.csproj" />
+    <ProjectReference Include="..\Simple_Interpreter_Fs\Simple_Interpreter_Fs\Simple_Interpreter_Fs.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\Simple_Interpreter_Fs\packages\FSharp.Core.4.7.0\lib\net45\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

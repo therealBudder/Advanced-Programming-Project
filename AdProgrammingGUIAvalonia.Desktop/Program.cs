@@ -3,6 +3,9 @@
 using Avalonia;
 using Avalonia.ReactiveUI;
 
+using Microsoft.FSharp.Core;
+using Microsoft.FSharp.Collections;
+
 namespace AdProgrammingGUIAvalonia.Desktop;
 
 class Program
