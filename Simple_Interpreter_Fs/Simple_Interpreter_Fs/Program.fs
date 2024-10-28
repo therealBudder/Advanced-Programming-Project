@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string
+    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -33,9 +33,10 @@ and scFloat(iStr, iVal, weight) =
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
 
-let rec scStr(remain : list<char>, word : list<char>) =
+let rec scStr(remain : list<char>, word : string) =
     match remain with
-    c :: tail when isletterordigit c -> scStr(tail, List.append word [c])
+    c :: tail when isletterordigit c -> let cStr = (string)c
+                                        scStr(tail, word + cStr)
     | _ -> (remain, word)
 
 let lexer input = 
@@ -50,6 +51,7 @@ let lexer input =
         | '^'::tail -> Pow :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
+        | '='::tail -> Assign:: scan tail
         | c :: tail when isblank c ->  scan tail
         | c :: tail when isdigit c ->  let (iStr, iVal) = scInt(tail, intVal c)
                                        match iStr with
@@ -57,9 +59,8 @@ let lexer input =
                                                                             Flt iVal :: scan iStr
                                        | _ -> Num iVal :: scan iStr
                                        // Num iVal :: scan iStr
-        | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, [c])
-                                       let out = (string)oStr
-                                       Var out :: scan iStr
+        | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
+                                       Var oStr :: scan iStr
         | _ -> raise lexError
     scan (str2lst input)
 
@@ -76,6 +77,9 @@ let getInputString() : string =
 // <F>        ::= <NR> <Fopt>
 // <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <empty> 
 // <NR>       ::= "Num" <value> | "Flt" <value> | "(" <E> ")"
+
+// Proposed BNF amendment:
+// <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
 
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
@@ -107,6 +111,9 @@ let parser tList =
         | _ -> raise parseError
     E tList
 
+let mutable variables = Map.empty
+
+
 let parseNeval tList = 
     let rec E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
@@ -116,6 +123,7 @@ let parseNeval tList =
         | Sub :: tail -> let (tLst, tval) = T tail
                          Eopt (tLst, value - tval)
         | _ -> (tList, value)
+    
     and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
@@ -126,22 +134,27 @@ let parseNeval tList =
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
         | _ -> (tList, value)
+    
     and F tList = (NR >> Fopt) tList
     and Fopt (tList, value) =
         match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
                          Fopt (tLst, (Math.Pow(value,tval)))
         | _ -> (tList, value)
+    
     and NR tList =
         match tList with
-        | Sub :: tail -> let (tLst, tval) = NR tail
-                         (tLst, -tval)
+        | Sub :: tail -> let (tList, tval) = NR tail
+                         (tList, -tval)
         | Num value :: tail -> (tail, (float)value)
         | Flt value :: tail -> (tail, value)
-        | Lpar :: tail -> let (tLst, tval) = E tail
-                          match tLst with 
+        | Lpar :: tail -> let (tList, tval) = E tail
+                          match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
+        | Var name :: Assign :: tail -> Console.WriteLine(name)
+                                        variables <- variables.Add(name, snd (E tail))
+                                        (tail, 0)
         | _ -> raise parseError
     E tList
 
@@ -184,10 +197,9 @@ let main argv  =
     let oList = lexer input
     let sList = printTList oList;
     //let pList = printTList (parser oList)
-    //let Out = parseNeval oList
-    //Console.WriteLine("Result = {0}", snd Out)
+    let Out = parseNeval oList
+    Console.WriteLine("Result = {0}", snd Out)
     //testInputs
-    Console.WriteLine(oList[0])
-
+    Console.WriteLine(variables)
     Console.ReadLine()
     0
