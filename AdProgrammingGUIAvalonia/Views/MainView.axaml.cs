@@ -79,7 +79,8 @@ public partial class MainView : UserControl
     {
         //First send the equation through to the F# parser
         //Then retrieve the result from the parser, and return it
-        return "RESULT";
+        var result = Program.guiIntegration(equation);
+        return result.ToString();
     }
 
     private void UpdateResultBox(String result)

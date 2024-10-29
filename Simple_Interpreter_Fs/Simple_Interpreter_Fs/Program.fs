@@ -160,7 +160,12 @@ let testInputs =
         then printfn "All tests passed"
         else printfn "Some of the tests failed"
         
-    
+let guiIntegration (inputString: string) =
+    let oList = lexer inputString
+    let Out = parseNeval oList
+    snd Out
+
+
 [<EntryPoint>]
 let main argv  =
     Console.WriteLine("Simple Interpreter")
