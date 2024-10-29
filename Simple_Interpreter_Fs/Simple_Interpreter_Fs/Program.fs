@@ -52,13 +52,13 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
-        | c :: tail when isblank c ->  scan tail
-        | c :: tail when isdigit c ->  let (iStr, iVal) = scInt(tail, intVal c)
-                                       match iStr with
-                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
-                                                                            Flt iVal :: scan iStr
-                                       | _ -> Num iVal :: scan iStr
-                                       // Num iVal :: scan iStr
+        | c :: tail when isblank c -> scan tail
+        | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
+                                      match iStr with
+                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
+                                                                           Flt iVal :: scan iStr
+                                      | _ -> Num iVal :: scan iStr
+                                      // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
                                        Var oStr :: scan iStr
         | _ -> raise lexError
@@ -111,8 +111,7 @@ let parser tList =
         | _ -> raise parseError
     E tList
 
-let mutable variables = Map.empty
-
+let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
 
 let parseNeval tList = 
     let rec E tList = (T >> Eopt) tList
@@ -155,6 +154,7 @@ let parseNeval tList =
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
+        | Var name :: tail -> (tail, variables[name])
         | _ -> raise parseError
     E tList
 
@@ -188,18 +188,41 @@ let testInputs =
     testFunctionFloat "1156.55+1.2" 1157.75
     testFunctionFloat "9/4" 2.25
     printfn "Tests Finished"
-    
-    
+
 [<EntryPoint>]
-let main argv  =
-    Console.WriteLine("Simple Interpreter")
+//let main argv  =
+//    Console.WriteLine("Simple Interpreter\n-----------------")
+    
+//    let input:string = getInputString()
+
+//    let oList = lexer input
+//    let sList = printTList oList;
+//    Console.WriteLine();
+
+//    //let pList = printTList (parser oList)
+//    let Out = parseNeval oList
+    
+//    Console.WriteLine("Result = {0}", snd Out)
+//    //testInputs
+//    Console.WriteLine(variables)
+//    Console.ReadLine()
+//    0
+
+let rec main' argv  =
     let input:string = getInputString()
-    let oList = lexer input
-    let sList = printTList oList;
-    //let pList = printTList (parser oList)
-    let Out = parseNeval oList
-    Console.WriteLine("Result = {0}", snd Out)
-    //testInputs
-    Console.WriteLine(variables)
-    Console.ReadLine()
-    0
+    match str2lst input with
+    | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
+    | _ -> let oList = lexer input
+           let sList = printTList oList;
+
+           //let pList = printTList (parser oList)
+           let Out = parseNeval oList
+    
+           Console.WriteLine("Result = {0}", snd Out)
+           //testInputs
+           Console.WriteLine(variables)
+           Console.WriteLine();
+           main' argv
+           0
+
+    
