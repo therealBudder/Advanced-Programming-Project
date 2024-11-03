@@ -56,8 +56,9 @@ let getInputString() : string =
 
 // Grammar in BNF:
 // version 1.0
-// <E>        ::= <T> <Eopt>
-// <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
+// <assignment> ::= "let" IDENTIFIER "=" <E>
+// <E>        ::= IDENTIFIER <Eopt> | <T> <Eopt>
+// <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | "+" IDENTIFER <Eopt> | "-" IDENTIFER <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> |<empty>
 // <F>        ::= <NR> <Fopt>
