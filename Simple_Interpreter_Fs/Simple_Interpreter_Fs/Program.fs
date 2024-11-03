@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -35,6 +35,7 @@ let lexer input =
         | '+'::tail -> Add :: scan tail
         | '-'::tail -> Sub :: scan tail
         | '*'::tail -> Mul :: scan tail
+        | '/'::'/'::tail -> IntDiv :: scan tail
         | '/'::tail -> Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
@@ -77,6 +78,7 @@ let parser tList =
         match tList with
         | Mul :: tail -> (F >> Topt) tail
         | Div :: tail -> (F >> Topt) tail
+        | IntDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
@@ -111,6 +113,8 @@ let parseNeval tList =
                          Topt (tLst, value * tval)
         | Div :: tail -> let (tLst, tval) = F tail
                          if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
+        | IntDiv :: tail -> let (tLst, tval) = F tail
+                            if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)(value / tval)))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
         | _ -> (tList, value)
