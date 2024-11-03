@@ -113,7 +113,7 @@ let parseNeval tList =
         | Div :: tail -> let (tLst, tval) = F tail
                          if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
         | IntDiv :: tail -> let (tLst, tval) = F tail
-                            if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)(value / tval)))
+                            if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
         | _ -> (tList, value)
