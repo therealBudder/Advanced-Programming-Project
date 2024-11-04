@@ -158,7 +158,7 @@ let parseNeval tList =
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
-        | Var name :: tail -> (tail, variables[name])
+        | Var name :: tail -> (tail, variables.[name])
         | _ -> raise parseError
     E tList
 
