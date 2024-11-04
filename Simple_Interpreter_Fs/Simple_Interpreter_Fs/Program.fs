@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Num of number | Var of string | Assign
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of number | Var of string | Assign | Sin | Cos | Tan
 and number =
     Int of int | Flt of float
 
@@ -52,9 +52,12 @@ let lexer input =
         | '/'::tail -> Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
+        | 's'::'i'::'n'::tail -> Sin :: scan tail
+        | 'c'::'o'::'s'::tail -> Cos :: scan tail
+        | 't'::'a'::'n'::tail -> Tan :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
-        | '='::tail -> Assign:: scan tail
+        | '='::tail -> Assign:: scan tail 
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
@@ -76,7 +79,7 @@ let getInputString() : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
-// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> |<empty>
+// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> | "Sin" <F> | "Cos" <F> | "Tan" <F> | <empty>
 // <F>        ::= <NR> <Fopt>
 // <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <empty> 
 // <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
@@ -96,9 +99,12 @@ let parser tList =
         | Div :: tail -> (F >> Topt) tail
         | IntDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
+        | Sin :: tail -> (F >> Topt) tail
+        | Cos :: tail -> (F >> Topt) tail
+        | Tan :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
-    and Fopt tList =
+    and Fopt tList = 
         match tList with
         | Pow :: tail -> (NR >> Fopt) tail
         | _ -> tList
@@ -136,6 +142,12 @@ let parseNeval tList =
                             if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
+        | Sin :: tail -> let (tLst, tval) = F tail
+                         Topt (tLst, Math.Sin(tval))
+        | Cos :: tail -> let (tLst, tval) = F tail
+                         Topt (tLst, Math.Cos(tval))
+        | Tan :: tail -> let (tLst, tval) = F tail
+                         Topt (tLst, Math.Tan(tval))                  
         | _ -> (tList, value)
     
     and F tList = (NR >> Fopt) tList
@@ -190,10 +202,12 @@ let testInputs =
         then printfn "All tests passed"
         else printfn "Some of the tests failed"
         
-let guiIntegration (inputString: string) =
+let guiIntegration (inputString: string) = 
     let oList = lexer inputString
     let Out = parseNeval oList
     snd Out
+        
+    
 
 
 [<EntryPoint>]
