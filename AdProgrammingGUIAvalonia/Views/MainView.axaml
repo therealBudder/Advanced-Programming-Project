@@ -15,16 +15,16 @@
   <!--<TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
 	<!--<Button HorizontalAlignment="Center">Calculate</Button>-->
 	<Grid ShowGridLines="True" ColumnDefinitions="*, *, *" RowDefinitions="150, *, *">
-		<Grid MaxHeight="150" ShowGridLines="True" RowDefinitions="50, 50, 50">
+		<Grid MaxHeight="150" ShowGridLines="False" RowDefinitions="50, 50, 50">
 			<Button Name="reset" Grid.Row="0" HorizontalAlignment="Left" Margin="10" Click="ButtonClicked">Reset</Button>
 			<Button Name="compute" Grid.Row="0" HorizontalAlignment="Right" Margin="10" Click="ButtonClicked">Compute</Button>
 			<TextBox Name="equationInput" Grid.Row="1" Margin="10" Height="20" MaxLength="12" Watermark="{Binding EquationInputText}" ToolTip.Tip="Input equation then press enter or click compute" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
 			<TextBox Name="result" Grid.Row="2" Margin="10" Height="20" Watermark="{Binding ResultText}" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
 		</Grid>
-		<Grid Grid.Row="1" Grid.RowSpan="2" ShowGridLines="True" RowDefinitions="40, *">
-			<Label Grid.Row="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold">History</Label>
-			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right"></TextBox>
+		<Grid Grid.Row="1" Grid.RowSpan="2" ShowGridLines="False" RowDefinitions="40, *">
+			<Button Name="toggleHistory" Grid.Row="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Click="ButtonClicked">Show Errors</Button>
+			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="True"></TextBox>
+			<TextBox Name="error" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding ErrorText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="False"></TextBox>
 		</Grid>
-
 	</Grid>
 </UserControl>

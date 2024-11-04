@@ -17,6 +17,8 @@ public partial class MainView : UserControl
         InitializeComponent();
     }
 
+    bool showingErrors;
+
     public void ButtonClicked(object source, RoutedEventArgs args)
     {
         var button = (source as Button)!;
@@ -30,6 +32,11 @@ public partial class MainView : UserControl
             case "compute":
                 {
                     ComputeEquation();
+                }
+                break;
+            case "toggleHistory":
+                {
+                    ToggleHistoryBox();
                 }
                 break;
         }
@@ -50,11 +57,36 @@ public partial class MainView : UserControl
         String inputText = GetEquationInput();
         if (inputText != null && inputText != string.Empty)
         {
-            String result = GetResultFromFSharpParser(inputText);
-            String newHistoryItem = inputText + " = " + result;
-            UpdateResultBox(result);
-            UpdateHistory(newHistoryItem);
+            String result;
+            bool isError;
+            (result, isError) = GetResultFromFSharpParser(inputText);
+            if (isError)
+            {
+                String newErrorItem = inputText + ": " + result;
+                UpdateResultBox(result);
+                UpdateErrorHistory(newErrorItem);
+            }
+            else
+            {
+                String newHistoryItem = inputText + " = " + result;
+                UpdateResultBox(result);
+                UpdateResultHistory(newHistoryItem);
+            }
             ResetEquationBox();
+        }
+    }
+
+    private void ToggleHistoryBox()
+    {
+        var toggleButton = this.Find<Button>("toggleHistory") as Button;
+        var historyBox = this.Find<TextBox>("history") as TextBox;
+        var errorBox = this.Find<TextBox>("error") as TextBox;
+        if (toggleButton != null)
+        {
+            showingErrors = !showingErrors;
+            toggleButton.Content = showingErrors ? "Show History" : "Show Errors";
+            historyBox.IsVisible = !showingErrors;
+            errorBox.IsVisible = showingErrors;
         }
     }
 
@@ -75,12 +107,20 @@ public partial class MainView : UserControl
         return inputText;
     }
 
-    private String GetResultFromFSharpParser(String equation)
+    private (String, bool) GetResultFromFSharpParser(String equation)
     {
         //First send the equation through to the F# parser
         //Then retrieve the result from the parser, and return it
-        var result = Program.guiIntegration(equation);
-        return result.ToString();
+        double result;
+        try
+        {
+            result = Program.guiIntegration(equation);
+            return (result.ToString(), false);
+        }
+        catch (Exception ex)
+        {
+            return (ex.Message, true);
+        }
     }
 
     private void UpdateResultBox(String result)
@@ -93,7 +133,20 @@ public partial class MainView : UserControl
         }
     }
 
-    private void UpdateHistory(String newHistoryItem)
+    private void UpdateErrorHistory(String newErrorHistoryItem)
+    {
+        var errorBox = this.Find<TextBox>("error") as TextBox;
+        String errorHistoryText;
+        String updatedErrorHistoryText;
+        if (errorBox != null)
+        {
+            errorHistoryText = errorBox.Text ?? string.Empty;
+            updatedErrorHistoryText = errorHistoryText + newErrorHistoryItem + "\n";
+            errorBox.Text = updatedErrorHistoryText;
+        }
+    }
+
+    private void UpdateResultHistory(String newHistoryItem)
     {
         //First get a reference to history textbox
         //Then update its contents by appending the most recent equation + result to the end
