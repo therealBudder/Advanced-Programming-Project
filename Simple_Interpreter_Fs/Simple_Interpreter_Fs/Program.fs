@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -46,6 +46,7 @@ let lexer input =
         | '+'::tail -> Add :: scan tail
         | '-'::tail -> Sub :: scan tail
         | '*'::tail -> Mul :: scan tail
+        | '/'::'/'::tail -> IntDiv :: scan tail
         | '/'::tail -> Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
@@ -93,6 +94,7 @@ let parser tList =
         match tList with
         | Mul :: tail -> (F >> Topt) tail
         | Div :: tail -> (F >> Topt) tail
+        | IntDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
@@ -130,6 +132,8 @@ let parseNeval tList =
                          Topt (tLst, value * tval)
         | Div :: tail -> let (tLst, tval) = F tail
                          if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
+        | IntDiv :: tail -> let (tLst, tval) = F tail
+                            if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)
         | _ -> (tList, value)
@@ -165,29 +169,32 @@ let rec printTList (lst:list<terminal>) : list<string> =
                   
     | [] -> Console.Write("EOL\n")
             []
-
-let testFunctionInt input correctOut =
+    
+let test (input:string, correctOut:float) =
     let oList = lexer input
     let out = parseNeval oList
-    printfn "input: %s, Correct Result: %d, Interpreter Out: %f" input correctOut (snd out)
-let testFunctionFloat input correctOut =
-    let oList = lexer input
-    let out = parseNeval oList
-    printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
+    if snd out = correctOut then true
+    else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
+         false
     
 let testInputs =
     printfn "Tests Start"
-    testFunctionInt "2+7" 9
-    testFunctionInt "15+987" 1002
-    testFunctionInt "9-2" 7
-    testFunctionInt "987-15" 972
-    testFunctionInt "2*7" 14
-    testFunctionInt "15*987" 14580
-    testFunctionInt "8/2" 4
-    testFunctionInt "987/3" 329
-    testFunctionFloat "1156.55+1.2" 1157.75
-    testFunctionFloat "9/4" 2.25
-    printfn "Tests Finished"
+    if
+        test ("15+987", 1002.0) &&
+        test ("987-15", 972.0) &&
+        test ("15*987", 14805.0) &&
+        test ("8/2", 4.0) &&
+        test ("987/3", 329.0) &&
+        test ("1156.55+1.2", 1157.75) &&
+        test ("9/4", 2.25)
+        then printfn "All tests passed"
+        else printfn "Some of the tests failed"
+        
+let guiIntegration (inputString: string) =
+    let oList = lexer inputString
+    let Out = parseNeval oList
+    snd Out
+
 
 [<EntryPoint>]
 //let main argv  =

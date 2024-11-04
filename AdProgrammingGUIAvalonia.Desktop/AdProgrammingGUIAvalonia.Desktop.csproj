@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,5 +16,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AdProgrammingGUIAvalonia\AdProgrammingGUIAvalonia.csproj" />
+    <ProjectReference Include="..\Simple_Interpreter_Fs\Simple_Interpreter_Fs\Simple_Interpreter_Fs.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\Simple_Interpreter_Fs\packages\FSharp.Core.4.7.0\lib\net45\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
