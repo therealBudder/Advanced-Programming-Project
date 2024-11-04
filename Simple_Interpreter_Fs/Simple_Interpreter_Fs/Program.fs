@@ -77,10 +77,8 @@ let getInputString() : string =
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> |<empty>
 // <F>        ::= <NR> <Fopt>
 // <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <empty> 
-// <NR>       ::= "Num" <value> | "Flt" <value> | "(" <E> ")"
-
-// Proposed BNF amendment:
 // <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
+
 
 let parser tList = 
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
