@@ -6,7 +6,7 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Num of int | Flt of float | Var of string | Assign
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
