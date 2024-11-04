@@ -227,7 +227,10 @@ let rec main' argv  =
     
            Console.WriteLine("Result = {0}", snd Out)
            //testInputs
-           Console.WriteLine(variables)
+           Console.WriteLine("Symbol table:")
+           for entry in variables do
+               Console.Write("var " + entry.Key + " = " + entry.Value.ToString() + " ")
+           // Console.WriteLine(variables)
            Console.WriteLine();
            main' argv
            0
