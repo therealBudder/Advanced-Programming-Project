@@ -6,7 +6,9 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign | Sin | Cos | Tan | SinInv | CosInv | TanInv
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of number | Var of string | Assign | Sin | Cos | Tan | SinInv | CosInv | TanInv
+and number =
+    Int of int | Flt of float    
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -69,8 +71,8 @@ let lexer input =
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
-                                                                           Flt iVal :: scan iStr
-                                      | _ -> Num iVal :: scan iStr
+                                                                           Num (Flt iVal) :: scan iStr
+                                      | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
                                        Var oStr :: scan iStr
@@ -115,8 +117,8 @@ let parser tList =
     and NR tList =
         match tList with
         | Sub :: tail -> tail
-        | Num value :: tail -> tail
-        | Flt value :: tail -> tail
+        | Num (Int value) :: tail -> tail
+        | Num (Flt value) :: tail -> tail
         | Sin :: tail -> (F >> Topt) tail
         | Cos :: tail -> (F >> Topt) tail
         | Tan :: tail -> (F >> Topt) tail
@@ -165,8 +167,8 @@ let parseNeval tList =
         match tList with
         | Sub :: tail -> let (tList, tval) = NR tail
                          (tList, -tval)
-        | Num value :: tail -> (tail, (float)value)
-        | Flt value :: tail -> (tail, value)
+        | Num (Int value) :: tail -> (tail, (float)value)
+        | Num (Flt value) :: tail -> (tail, value)
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
