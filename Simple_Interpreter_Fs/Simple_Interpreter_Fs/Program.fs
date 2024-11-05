@@ -6,9 +6,24 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of number | Var of string | Assign | Sin | Cos | Tan | SinInv | CosInv | TanInv
+    | Add
+    | Sub
+    | Mul
+    | Div
+    | IntDiv
+    | Rem
+    | Pow
+    | Lpar
+    | Rpar
+    | Neg
+    | Num of number
+    | Var of string
+    | Assign
+    | Trig of trig
 and number =
-    Int of int | Flt of float    
+    Int of int | Flt of float
+and trig =
+     Sin | Cos | Tan | SinInv | CosInv | TanInv
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -58,12 +73,12 @@ let lexer input =
         | '/'::tail -> Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
-        | 'a'::'s'::'i'::'n'::tail -> SinInv :: scan tail
-        | 'a'::'c'::'o'::'s'::tail -> CosInv :: scan tail
-        | 'a'::'t'::'a'::'n'::tail -> TanInv :: scan tail
-        | 's'::'i'::'n'::tail -> Sin :: scan tail
-        | 'c'::'o'::'s'::tail -> Cos :: scan tail
-        | 't'::'a'::'n'::tail -> Tan :: scan tail
+        | 'a'::'s'::'i'::'n'::tail -> Trig SinInv :: scan tail
+        | 'a'::'c'::'o'::'s'::tail -> Trig CosInv :: scan tail
+        | 'a'::'t'::'a'::'n'::tail -> Trig TanInv :: scan tail
+        | 's'::'i'::'n'::tail -> Trig Sin :: scan tail
+        | 'c'::'o'::'s'::tail -> Trig Cos :: scan tail
+        | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail 
@@ -119,12 +134,12 @@ let parser tList =
         | Sub :: tail -> tail
         | Num (Int value) :: tail -> tail
         | Num (Flt value) :: tail -> tail
-        | Sin :: tail -> (F >> Topt) tail
-        | Cos :: tail -> (F >> Topt) tail
-        | Tan :: tail -> (F >> Topt) tail
-        | SinInv :: tail -> (F >> Topt) tail
-        | CosInv :: tail -> (F >> Topt) tail
-        | TanInv :: tail -> (F >> Topt) tail
+        | Trig Sin :: tail -> (F >> Topt) tail
+        | Trig Cos :: tail -> (F >> Topt) tail
+        | Trig Tan :: tail -> (F >> Topt) tail
+        | Trig SinInv :: tail -> (F >> Topt) tail
+        | Trig CosInv :: tail -> (F >> Topt) tail
+        | Trig TanInv :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
                           | _ -> raise parseError
@@ -173,18 +188,18 @@ let parseNeval tList =
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
-        | Sin :: tail -> let (tLst, tval) = NR tail
-                         (tLst, Math.Sin(tval))
-        | Cos :: tail -> let (tLst, tval) = NR tail
-                         (tLst, Math.Cos(tval))
-        | Tan :: tail -> let (tLst, tval) = NR tail
-                         (tLst, Math.Tan(tval))
-        | SinInv :: tail -> let (tLst, tval) = NR tail
-                            (tLst, Math.Asin(tval))
-        | CosInv :: tail -> let (tLst, tval) = NR tail
-                            (tLst, Math.Acos(tval))
-        | TanInv :: tail -> let (tLst, tval) = NR tail
-                            (tLst, Math.Atan(tval))                  
+        | Trig Sin :: tail -> let (tLst, tval) = NR tail
+                              (tLst, Math.Sin(tval))
+        | Trig Cos :: tail -> let (tLst, tval) = NR tail
+                              (tLst, Math.Cos(tval))
+        | Trig Tan :: tail -> let (tLst, tval) = NR tail
+                              (tLst, Math.Tan(tval))
+        | Trig SinInv :: tail -> let (tLst, tval) = NR tail
+                                 (tLst, Math.Asin(tval))
+        | Trig CosInv :: tail -> let (tLst, tval) = NR tail
+                                 (tLst, Math.Acos(tval))
+        | Trig TanInv :: tail -> let (tLst, tval) = NR tail
+                                 (tLst, Math.Atan(tval))                  
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
