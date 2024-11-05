@@ -138,8 +138,14 @@ public partial class MainView : UserControl
         {
             showingErrors = !showingErrors;
             toggleButton.Content = showingErrors ? "Show Result History" : "Show Error History";
-            historyBox.IsVisible = !showingErrors;
-            errorBox.IsVisible = showingErrors;
+            if (historyBox != null)
+            {
+                historyBox.IsVisible = !showingErrors;
+            }
+            if (errorBox != null)
+            {
+                errorBox.IsVisible = showingErrors;
+            }
         }
     }
 

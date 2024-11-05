@@ -23,8 +23,8 @@
 		</Grid>
 		<Grid Grid.Row="1" Grid.RowSpan="2" ShowGridLines="False" RowDefinitions="40, *">
 			<Button Name="toggleHistory" Grid.Row="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Click="ButtonClicked">Show Error History</Button>
-			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="True"></TextBox>
-			<TextBox Name="error" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding ErrorText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="False"></TextBox>
+			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" IsVisible="True"></TextBox>
+			<TextBox Name="error" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding ErrorText}" HorizontalContentAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" IsVisible="False"></TextBox>
 		</Grid>
 		<Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" ShowGridLines="True" RowDefinitions="25, *">
 			<Label HorizontalAlignment="Center" FontWeight="Bold">Help</Label>
