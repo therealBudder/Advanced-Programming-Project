@@ -86,8 +86,8 @@ let lexer input =
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
-                                                                           Num (Flt iVal) :: scan iStr
-                                      | _ -> Num (Int iVal) :: scan iStr
+                                                                           Flt iVal :: scan iStr
+                                      | _ -> Num iVal :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
                                        Var oStr :: scan iStr
@@ -182,8 +182,8 @@ let parseNeval tList =
         match tList with
         | Sub :: tail -> let (tList, tval) = NR tail
                          (tList, -tval)
-        | Num (Int value) :: tail -> (tail, (float)value)
-        | Num (Flt value) :: tail -> (tail, value)
+        | Num value :: tail -> (tail, (float)value)
+        | Flt value :: tail -> (tail, value)
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
