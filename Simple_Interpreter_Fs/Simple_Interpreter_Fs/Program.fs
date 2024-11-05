@@ -6,13 +6,15 @@
 open System
 
 type terminal = 
-    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign | Sin | Cos | Tan
+    Add | Sub | Mul | Div | IntDiv | Rem | Pow | Lpar | Rpar | Neg | Num of int | Flt of float | Var of string | Assign | Sin | Cos | Tan | SinInv | CosInv | TanInv
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
 let isletter c = System.Char.IsLetter c
 let isletterordigit c = System.Char.IsLetterOrDigit c
+let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield (Math.PI/2.0) + Math.PI*i]
+
 
 let lexError = System.Exception("error: invalid symbol in expression")
 let varError = System.Exception("error: incorrect var assignment")
@@ -22,6 +24,10 @@ let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
 let divisionByZeroError = System.Exception("Division by Zero Detected")
 
+let rec checkAgainstTanList(x,list) =
+    match list with
+    x :: tail when tail.Head <> x -> (x, list)
+    | _ -> raise parseError
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -50,6 +56,9 @@ let lexer input =
         | '/'::tail -> Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
+        | 'a'::'s'::'i'::'n'::tail -> SinInv :: scan tail
+        | 'a'::'c'::'o'::'s'::tail -> CosInv :: scan tail
+        | 'a'::'t'::'a'::'n'::tail -> TanInv :: scan tail
         | 's'::'i'::'n'::tail -> Sin :: scan tail
         | 'c'::'o'::'s'::tail -> Cos :: scan tail
         | 't'::'a'::'n'::tail -> Tan :: scan tail
@@ -77,9 +86,9 @@ let getInputString() : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
-// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> | "Sin" <F> | "Cos" <F> | "Tan" <F> | <empty>
+// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> ||<empty>
 // <F>        ::= <NR> <Fopt>
-// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <empty> 
+// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | "Sin" <F> | "Cos" <F> | "Tan" <F> | <empty> 
 // <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
 
 
@@ -97,9 +106,6 @@ let parser tList =
         | Div :: tail -> (F >> Topt) tail
         | IntDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
-        | Sin :: tail -> (F >> Topt) tail
-        | Cos :: tail -> (F >> Topt) tail
-        | Tan :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
     and Fopt tList = 
@@ -111,6 +117,12 @@ let parser tList =
         | Sub :: tail -> tail
         | Num value :: tail -> tail
         | Flt value :: tail -> tail
+        | Sin :: tail -> (F >> Topt) tail
+        | Cos :: tail -> (F >> Topt) tail
+        | Tan :: tail -> (F >> Topt) tail
+        | SinInv :: tail -> (F >> Topt) tail
+        | CosInv :: tail -> (F >> Topt) tail
+        | TanInv :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
                           | _ -> raise parseError
@@ -139,13 +151,7 @@ let parseNeval tList =
         | IntDiv :: tail -> let (tLst, tval) = F tail
                             if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
         | Rem :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, value % tval)
-        | Sin :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, Math.Sin(tval))
-        | Cos :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, Math.Cos(tval))
-        | Tan :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, Math.Tan(tval))                  
+                         Topt (tLst, value % tval)                  
         | _ -> (tList, value)
     
     and F tList = (NR >> Fopt) tList
@@ -165,6 +171,18 @@ let parseNeval tList =
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
+        | Sin :: tail -> let (tLst, tval) = NR tail
+                         (tLst, Math.Sin(tval))
+        | Cos :: tail -> let (tLst, tval) = NR tail
+                         (tLst, Math.Cos(tval))
+        | Tan :: tail -> let (tLst, tval) = NR tail
+                         (tLst, Math.Tan(tval))
+        | SinInv :: tail -> let (tLst, tval) = NR tail
+                            (tLst, Math.Asin(tval))
+        | CosInv :: tail -> let (tLst, tval) = NR tail
+                            (tLst, Math.Acos(tval))
+        | TanInv :: tail -> let (tLst, tval) = NR tail
+                            (tLst, Math.Atan(tval))                  
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
