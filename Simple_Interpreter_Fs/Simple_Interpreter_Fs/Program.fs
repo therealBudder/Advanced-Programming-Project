@@ -6,16 +6,12 @@
 open System
 
 type terminal = 
-    | Add
-    | Sub
-    | Mul
-    | Div
-    | IntDiv
     | Rem
     | Pow
     | Lpar
     | Rpar
     | Neg
+    | Arith of arith
     | Num of number
     | Var of string
     | Assign
@@ -24,6 +20,8 @@ and number =
     Int of int | Flt of float
 and trig =
      Sin | Cos | Tan | SinInv | CosInv | TanInv
+and arith =
+    Add | Sub | Mul | Div | IntDiv 
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -66,11 +64,11 @@ let lexer input =
     let rec scan input =
         match input with
         | [] -> []
-        | '+'::tail -> Add :: scan tail
-        | '-'::tail -> Sub :: scan tail
-        | '*'::tail -> Mul :: scan tail
-        | '/'::'/'::tail -> IntDiv :: scan tail
-        | '/'::tail -> Div :: scan tail
+        | '+'::tail -> Arith Add :: scan tail
+        | '-'::tail -> Arith Sub :: scan tail
+        | '*'::tail -> Arith Mul :: scan tail
+        | '/'::'/'::tail -> Arith IntDiv :: scan tail
+        | '/'::tail -> Arith Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
         | 'a'::'s'::'i'::'n'::tail -> Trig SinInv :: scan tail
@@ -113,15 +111,15 @@ let parser tList =
     let rec E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
         match tList with
-        | Add :: tail -> (T >> Eopt) tail
-        | Sub :: tail -> (T >> Eopt) tail
+        | Arith Add :: tail -> (T >> Eopt) tail
+        | Arith Sub :: tail -> (T >> Eopt) tail
         | _ -> tList
     and T tList = (F >> Topt) tList
     and Topt tList =
         match tList with
-        | Mul :: tail -> (F >> Topt) tail
-        | Div :: tail -> (F >> Topt) tail
-        | IntDiv :: tail -> (F >> Topt) tail
+        | Arith Mul :: tail -> (F >> Topt) tail
+        | Arith Div :: tail -> (F >> Topt) tail
+        | Arith IntDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
@@ -131,7 +129,7 @@ let parser tList =
         | _ -> tList
     and NR tList =
         match tList with
-        | Sub :: tail -> tail
+        | Arith Sub :: tail -> tail
         | Num (Int value) :: tail -> tail
         | Num (Flt value) :: tail -> tail
         | Trig Sin :: tail -> (F >> Topt) tail
@@ -152,21 +150,21 @@ let parseNeval tList =
     let rec E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
         match tList with
-        | Add :: tail -> let (tLst, tval) = T tail
-                         Eopt (tLst, value + tval)
-        | Sub :: tail -> let (tLst, tval) = T tail
-                         Eopt (tLst, value - tval)
+        | Arith Add :: tail -> let (tLst, tval) = T tail
+                               Eopt (tLst, value + tval)
+        | Arith Sub :: tail -> let (tLst, tval) = T tail
+                               Eopt (tLst, value - tval)
         | _ -> (tList, value)
     
     and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
-        | Mul :: tail -> let (tLst, tval) = F tail
-                         Topt (tLst, value * tval)
-        | Div :: tail -> let (tLst, tval) = F tail
-                         if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
-        | IntDiv :: tail -> let (tLst, tval) = F tail
-                            if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
+        | Arith Mul :: tail -> let (tLst, tval) = F tail
+                               Topt (tLst, value * tval)
+        | Arith Div :: tail -> let (tLst, tval) = F tail
+                               if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
+        | Arith IntDiv :: tail -> let (tLst, tval) = F tail
+                                  if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)                  
         | _ -> (tList, value)
@@ -180,8 +178,8 @@ let parseNeval tList =
     
     and NR tList =
         match tList with
-        | Sub :: tail -> let (tList, tval) = NR tail
-                         (tList, -tval)
+        | Arith Sub :: tail -> let (tList, tval) = NR tail
+                               (tList, -tval)
         | Num (Int value) :: tail -> (tail, (float)value)
         | Num (Flt value) :: tail -> (tail, value)
         | Lpar :: tail -> let (tList, tval) = E tail
