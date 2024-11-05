@@ -87,7 +87,7 @@ let lexer input =
                                       match iStr with
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
-                                      | _ -> Num (Flt iVal) :: scan iStr
+                                      | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
                                        Var oStr :: scan iStr
