@@ -5,8 +5,15 @@
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
-        <FluentTheme />
-	</Application.Styles>
+        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
+        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
+      
+        <!-- Add the line below to get OxyPlot UI theme applied. -->
+        <StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
+      
+        <!-- Add the line below to get OxyPlot UI theme applied in Avalonia 11. -->
+        <StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
+    </Application.Styles>
 </Application>
 
 
