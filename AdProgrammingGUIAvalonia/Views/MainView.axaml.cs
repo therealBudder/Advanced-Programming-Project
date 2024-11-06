@@ -8,8 +8,6 @@ using Microsoft.FSharp.Collections;
 using System;
 using System.Linq;
 
-using OxyPlot;
-
 namespace AdProgrammingGUIAvalonia.Views;
 
 public partial class MainView : UserControl
