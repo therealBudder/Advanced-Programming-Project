@@ -6,25 +6,39 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AdProgrammingGUIAvalonia.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+		<vm:MainViewModel />
+	</Design.DataContext>
 
-  <!--<TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
+	<!--<TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
 	<!--<Button HorizontalAlignment="Center">Calculate</Button>-->
 	<Grid ShowGridLines="True" ColumnDefinitions="*, *, *" RowDefinitions="150, *, *">
 		<Grid MaxHeight="150" ShowGridLines="False" RowDefinitions="50, 50, 50">
 			<Button Name="reset" Grid.Row="0" HorizontalAlignment="Left" Margin="10" Click="ButtonClicked">Reset</Button>
-			<Button Name="compute" Grid.Row="0" HorizontalAlignment="Right" Margin="10" Click="ButtonClicked">Compute</Button>
-			<TextBox Name="equationInput" Grid.Row="1" Margin="10" Height="20" MaxLength="12" Watermark="{Binding EquationInputText}" ToolTip.Tip="Input equation then press enter or click compute" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
+			<Button Name="compute" IsDefault="True" Grid.Row="0" HorizontalAlignment="Right" Margin="10" Click="ButtonClicked">Compute</Button>
+			<TextBox Name="equationInput"  Grid.Row="1" Margin="10" Height="20" MaxLength="12" Watermark="{Binding EquationInputText}" ToolTip.Tip="Input equation then press enter or click compute" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
 			<TextBox Name="result" Grid.Row="2" Margin="10" Height="20" Watermark="{Binding ResultText}" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
 		</Grid>
 		<Grid Grid.Row="1" Grid.RowSpan="2" ShowGridLines="False" RowDefinitions="40, *">
-			<Button Name="toggleHistory" Grid.Row="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Click="ButtonClicked">Show Errors</Button>
-			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="True"></TextBox>
-			<TextBox Name="error" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding ErrorText}" HorizontalContentAlignment="Right" TextAlignment="Right" IsVisible="False"></TextBox>
+			<Button Name="toggleHistory" Grid.Row="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Click="ButtonClicked">Show Error History</Button>
+			<TextBox Name="history" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding HistoryText}" HorizontalContentAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" IsVisible="True"></TextBox>
+			<TextBox Name="error" Grid.Row="1" Margin="10" IsReadOnly="True" Watermark="{Binding ErrorText}" HorizontalContentAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" IsVisible="False"></TextBox>
+		</Grid>
+		<Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" ShowGridLines="True" RowDefinitions="25, *">
+			<Label HorizontalAlignment="Center" FontWeight="Bold">Help</Label>
+			<Grid Grid.Row="1" ShowGridLines="True" ColumnDefinitions="*, *, *, *, *, *, *, *, *" RowDefinitions="*, *, *">
+				<Button Name="plusBtn" Grid.Row="0" Grid.Column="0"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Plus.&#x0a;Usage:&#x0a;{value} + {value}" Click="ButtonClicked">+</Button>
+				<Button Name="minusBtn" Grid.Row="0" Grid.Column="1"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Minus.&#x0a;Usage:&#x0a;-{value}&#x0a;{value} - {value}" Click="ButtonClicked">-</Button>
+				<Button Name="multiplyBtn" Grid.Row="0" Grid.Column="2"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Multiply.&#x0a;Usage:&#x0a;{value} * {value}" Click="ButtonClicked">*</Button>
+				<Button Name="divBtn" Grid.Row="0" Grid.Column="3"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Division.&#x0a;Usage:&#x0a;{value} / {value}" Click="ButtonClicked">/</Button>
+				<Button Name="floorDivBtn" Grid.Row="0" Grid.Column="4"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Floor Division.&#x0a;Usage:&#x0a;{value} // {value}" Click="ButtonClicked">//</Button>
+				<Button Name="moduloBtn" Grid.Row="0" Grid.Column="5"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Modulo Division.&#x0a;Usage:&#x0a;{value} % {value}" Click="ButtonClicked">%</Button>
+				<Button Name="powerBtn" Grid.Row="0" Grid.Column="6"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Power.&#x0a;Usage:&#x0a;{value} ^ {value}" Click="ButtonClicked">^</Button>
+				<Button Name="parenthesisBtn" Grid.Row="0" Grid.Column="7"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Parenthesis.&#x0a;Usage:&#x0a;( {value} )" Click="ButtonClicked">()</Button>
+				<Button Name="assignmentBtn" Grid.Row="0" Grid.Column="8" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Assignment.&#x0a;Usage:&#x0a;{value} = {value}" Click="ButtonClicked">=</Button>
+			</Grid>
 		</Grid>
 	</Grid>
 </UserControl>

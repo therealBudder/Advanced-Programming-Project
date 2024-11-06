@@ -8,5 +8,5 @@
         x:Class="AdProgrammingGUIAvalonia.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="AdProgrammingGUIAvalonia">
-        <views:MainView />
+	<views:MainView />
 </Window>
