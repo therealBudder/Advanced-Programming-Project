@@ -15,6 +15,12 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+
+
+        this.Loaded += (sender, args) =>
+        {
+            ResetEquationBox();
+        };
     }
 
     bool showingErrors;
@@ -39,6 +45,52 @@ public partial class MainView : UserControl
                     ToggleHistoryBox();
                 }
                 break;
+            case "plusBtn":
+                {
+                    InsertSymbol("+");
+                }
+                break;
+            case "minusBtn":
+                {
+                    InsertSymbol("-");
+                }
+                break;
+            case "multiplyBtn":
+                {
+                    InsertSymbol("*");
+                }
+                break;
+            case "divBtn":
+                {
+                    InsertSymbol("/");
+                }
+                break;
+            case "floorDivBtn":
+                {
+                    InsertSymbol("//");
+                }
+                break;
+            case "moduloBtn":
+                {
+                    InsertSymbol("%");
+                }
+                break;
+            case "powerBtn":
+                {
+                    InsertSymbol("^");
+                }
+                break;
+            case "parenthesisBtn":
+                {
+                    InsertSymbol("()");
+                }
+                break;
+            case "assignmentBtn":
+                {
+                    InsertSymbol("=");
+                }
+                break;
+
         }
     }
 
@@ -48,7 +100,8 @@ public partial class MainView : UserControl
         var equationBox = this.Find<TextBox>("equationInput") as TextBox;
         if (equationBox != null)
         {
-            equationBox.Text = string.Empty;
+            equationBox.Text = null;
+            equationBox.Focus();
         }
     }
 
@@ -84,9 +137,15 @@ public partial class MainView : UserControl
         if (toggleButton != null)
         {
             showingErrors = !showingErrors;
-            toggleButton.Content = showingErrors ? "Show History" : "Show Errors";
-            historyBox.IsVisible = !showingErrors;
-            errorBox.IsVisible = showingErrors;
+            toggleButton.Content = showingErrors ? "Show Result History" : "Show Error History";
+            if (historyBox != null)
+            {
+                historyBox.IsVisible = !showingErrors;
+            }
+            if (errorBox != null)
+            {
+                errorBox.IsVisible = showingErrors;
+            }
         }
     }
 
@@ -136,13 +195,16 @@ public partial class MainView : UserControl
     private void UpdateErrorHistory(String newErrorHistoryItem)
     {
         var errorBox = this.Find<TextBox>("error") as TextBox;
-        String errorHistoryText;
-        String updatedErrorHistoryText;
         if (errorBox != null)
         {
-            errorHistoryText = errorBox.Text ?? string.Empty;
-            updatedErrorHistoryText = errorHistoryText + newErrorHistoryItem + "\n";
-            errorBox.Text = updatedErrorHistoryText;
+            if (errorBox.Text != null)
+            {
+                errorBox.Text = errorBox.Text.Insert(0, newErrorHistoryItem + "\n");
+            }
+            else
+            {
+                errorBox.Text = newErrorHistoryItem;
+            }
         }
     }
 
@@ -151,13 +213,43 @@ public partial class MainView : UserControl
         //First get a reference to history textbox
         //Then update its contents by appending the most recent equation + result to the end
         var historyBox = this.Find<TextBox>("history") as TextBox;
-        String historyText;
-        String updatedHistoryText;
         if (historyBox != null)
         {
-            historyText = historyBox.Text ?? string.Empty;
-            updatedHistoryText = historyText + newHistoryItem + "\n";
-            historyBox.Text = updatedHistoryText;
+            if (historyBox.Text != null)
+            {
+                historyBox.Text = historyBox.Text.Insert(0, newHistoryItem + "\n");
+            }
+            else
+            {
+                historyBox.Text = newHistoryItem;
+            }
         }
+    }
+
+    private void InsertSymbol(string symbol)
+    {
+        var equationBox = this.Find<TextBox>("equationInput") as TextBox;
+        int selection = 0;
+        if (equationBox != null)
+        {
+            if (equationBox.Text != null)
+            {
+                selection = equationBox.SelectionStart;
+                equationBox.Text = equationBox.Text.Insert(selection, symbol);
+            }
+            else
+            {
+                equationBox.Text = symbol;
+            }
+            selection += symbol.Length;
+            if (symbol == "()")
+            {
+                selection--;
+            }
+
+            equationBox.Focus();
+            equationBox.CaretIndex = selection;
+        }
+
     }
 }
