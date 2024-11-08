@@ -105,7 +105,7 @@ let getInputString() : string =
 // <T>        ::= <F> <Topt>
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> ||<empty>
 // <F>        ::= <NR> <Fopt>
-// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | "Sin" <F> | "Cos" <F> | "Tan" <F> | <empty> 
+// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | "Sin" <F> | "Cos" <F> | "Tan" <F> | "Asin" <F> | "Acos" <F> | "ATan" <F> | <empty> 
 // <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
 
 
