@@ -42,7 +42,9 @@ let tanUndefinedError = System.Exception("Tan call will result in undefined beha
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
-
+let checkBetweenAtanValues(x:float) =
+    let out = fun input -> (input >= -(Math.PI/2.0) && input <= (Math.PI/2.0))
+    out x 
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -192,15 +194,16 @@ let parseNeval tList =
                               (tLst, Math.Cos(tval*(Math.PI/180.0)))
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               match  checkAgainstTanList (tval * (Math.PI/180.0)) with
-                              | true -> raise tanUndefinedError
-                              | false -> (tLst, Math.Tan(tval * (Math.PI/180.0)))
-                              //if checkAgainstTanList (tval * (Math.PI/180.0)) = true then raise parseError else (tLst, Math.Tan(tval * (Math.PI/180.0)))
+                              | false -> raise tanUndefinedError
+                              | true -> (tLst, Math.Tan(tval * (Math.PI/180.0)))
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Math.Asin(tval))
+                               (tLst, Math.Asin(tval*(Math.PI/180.0)))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Math.Acos(tval))
+                               (tLst, Math.Acos(tval*(Math.PI/180.0)))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Math.Atan(tval))                  
+                               match checkBetweenAtanValues tval with 
+                               | false -> raise tanUndefinedError
+                               | true -> (tLst, Math.Atan(tval*(Math.PI/180.0)))
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
