@@ -19,7 +19,7 @@ type terminal =
 and number =
     Int of int | Flt of float
 and trig =
-     Sin | Cos | Tan | SinInv | CosInv | TanInv
+     Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
     Add | Sub | Mul | Div | IntDiv 
 
@@ -28,7 +28,7 @@ let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
 let isletter c = System.Char.IsLetter c
 let isletterordigit c = System.Char.IsLetterOrDigit c
-let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield (Math.PI/2.0) + Math.PI*i]
+let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
 
 
 let lexError = System.Exception("error: invalid symbol in expression")
@@ -38,11 +38,11 @@ let floatVal (c:char) = (float)((int)c - (int)'0')
 let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
 let divisionByZeroError = System.Exception("Division by Zero Detected")
+let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
 
-let rec checkAgainstTanList(x,list) =
-    match list with
-    x :: tail when tail.Head <> x -> (x, list)
-    | _ -> raise parseError
+let checkAgainstTanList(x:float) =
+    tanUndefinedList |> List.contains x
+
 let rec scInt(iStr, iVal) = 
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -71,9 +71,9 @@ let lexer input =
         | '/'::tail -> Arith Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | '^'::tail -> Pow :: scan tail
-        | 'a'::'s'::'i'::'n'::tail -> Trig SinInv :: scan tail
-        | 'a'::'c'::'o'::'s'::tail -> Trig CosInv :: scan tail
-        | 'a'::'t'::'a'::'n'::tail -> Trig TanInv :: scan tail
+        | 'a'::'s'::'i'::'n'::tail -> Trig ASin :: scan tail
+        | 'a'::'c'::'o'::'s'::tail -> Trig ACos :: scan tail
+        | 'a'::'t'::'a'::'n'::tail -> Trig ATan :: scan tail
         | 's'::'i'::'n'::tail -> Trig Sin :: scan tail
         | 'c'::'o'::'s'::tail -> Trig Cos :: scan tail
         | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
@@ -135,9 +135,9 @@ let parser tList =
         | Trig Sin :: tail -> (F >> Topt) tail
         | Trig Cos :: tail -> (F >> Topt) tail
         | Trig Tan :: tail -> (F >> Topt) tail
-        | Trig SinInv :: tail -> (F >> Topt) tail
-        | Trig CosInv :: tail -> (F >> Topt) tail
-        | Trig TanInv :: tail -> (F >> Topt) tail
+        | Trig ASin :: tail -> (F >> Topt) tail
+        | Trig ACos :: tail -> (F >> Topt) tail
+        | Trig ATan :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
                           | _ -> raise parseError
@@ -187,17 +187,20 @@ let parseNeval tList =
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Math.Sin(tval))
+                              (tLst, Math.Sin(tval*(Math.PI/180.0)))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Math.Cos(tval))
+                              (tLst, Math.Cos(tval*(Math.PI/180.0)))
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Math.Tan(tval))
-        | Trig SinInv :: tail -> let (tLst, tval) = NR tail
-                                 (tLst, Math.Asin(tval))
-        | Trig CosInv :: tail -> let (tLst, tval) = NR tail
-                                 (tLst, Math.Acos(tval))
-        | Trig TanInv :: tail -> let (tLst, tval) = NR tail
-                                 (tLst, Math.Atan(tval))                  
+                              match  checkAgainstTanList (tval * (Math.PI/180.0)) with
+                              | true -> raise tanUndefinedError
+                              | false -> (tLst, Math.Tan(tval * (Math.PI/180.0)))
+                              //if checkAgainstTanList (tval * (Math.PI/180.0)) = true then raise parseError else (tLst, Math.Tan(tval * (Math.PI/180.0)))
+        | Trig ASin :: tail -> let (tLst, tval) = NR tail
+                               (tLst, Math.Asin(tval))
+        | Trig ACos :: tail -> let (tLst, tval) = NR tail
+                               (tLst, Math.Acos(tval))
+        | Trig ATan :: tail -> let (tLst, tval) = NR tail
+                               (tLst, Math.Atan(tval))                  
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
