@@ -8,6 +8,7 @@ open System
 type terminal = 
     | Rem
     | Pow
+    | Exp
     | Lpar
     | Rpar
     | Neg
@@ -72,6 +73,7 @@ let lexer input =
         | '/'::'/'::tail -> Arith IntDiv :: scan tail
         | '/'::tail -> Arith Div :: scan tail
         | '%'::tail -> Rem :: scan tail
+        | 'e'::'^'::tail -> Exp :: scan tail
         | '^'::tail -> Pow :: scan tail
         | 'a'::'s'::'i'::'n'::tail -> Trig ASin :: scan tail
         | 'a'::'c'::'o'::'s'::tail -> Trig ACos :: scan tail
@@ -128,6 +130,7 @@ let parser tList =
     and Fopt tList = 
         match tList with
         | Pow :: tail -> (NR >> Fopt) tail
+        | Exp :: tail -> (NR >> Fopt) tail
         | _ -> tList
     and NR tList =
         match tList with
@@ -188,6 +191,8 @@ let parseNeval tList =
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
+        | Exp :: tail -> let (tLst, tval) = NR tail
+                         (tLst, (Math.Exp((float) tval)))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
                               (tLst, Math.Sin(tval*(Math.PI/180.0)))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
