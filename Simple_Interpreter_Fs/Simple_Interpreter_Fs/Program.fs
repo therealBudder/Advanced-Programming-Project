@@ -9,6 +9,7 @@ type terminal =
     | Rem
     | Pow
     | Exp
+    | Log of log
     | Lpar
     | Rpar
     | Neg
@@ -22,7 +23,9 @@ and number =
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
-    Add | Sub | Mul | Div | IntDiv 
+    Add | Sub | Mul | Div | IntDiv
+and log =
+    LogN | LogOther
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -75,6 +78,8 @@ let lexer input =
         | '%'::tail -> Rem :: scan tail
         | 'e'::'^'::tail -> Exp :: scan tail
         | '^'::tail -> Pow :: scan tail
+        | 'l'::'n'::tail -> Log LogN :: scan tail
+        | 'l'::'o'::'g'::tail -> Log LogOther :: scan tail 
         | 'a'::'s'::'i'::'n'::tail -> Trig ASin :: scan tail
         | 'a'::'c'::'o'::'s'::tail -> Trig ACos :: scan tail
         | 'a'::'t'::'a'::'n'::tail -> Trig ATan :: scan tail
@@ -130,13 +135,15 @@ let parser tList =
     and Fopt tList = 
         match tList with
         | Pow :: tail -> (NR >> Fopt) tail
-        | Exp :: tail -> (NR >> Fopt) tail
         | _ -> tList
     and NR tList =
         match tList with
         | Arith Sub :: tail -> tail
         | Num (Int value) :: tail -> tail
         | Num (Flt value) :: tail -> tail
+        | Exp :: tail -> (NR >> Fopt) tail
+        | Log LogN :: tail -> (NR >> Fopt) tail
+        | Log LogOther :: tail -> (NR >> Fopt) tail
         | Trig Sin :: tail -> (F >> Topt) tail
         | Trig Cos :: tail -> (F >> Topt) tail
         | Trig Tan :: tail -> (F >> Topt) tail
@@ -187,6 +194,8 @@ let parseNeval tList =
                                (tList, -tval)
         | Num (Int value) :: tail -> (tail, (float)value)
         | Num (Flt value) :: tail -> (tail, value)
+        | Log LogN :: tail -> let (tLst, tval) = NR tail
+                              (tLst, (Math.Log((float) tval)))                          
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
