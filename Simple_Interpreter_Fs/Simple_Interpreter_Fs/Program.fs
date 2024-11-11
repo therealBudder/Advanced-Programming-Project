@@ -20,10 +20,41 @@ type terminal =
     | Trig of trig
 and number =
     Int of int | Flt of float
+    static member fltVal n = match n with
+                             | Flt f -> f
+                             | Int i -> float i
+    static member (+) (x: number, y: number) = match (x, y) with
+                                               | Int x, Int y -> Int (x + y)
+                                               | _ -> Flt (number.fltVal x + number.fltVal y)
+    static member (-) (x:number, y:number) = match (x, y) with
+                                             | Int x, Int y -> Int (x - y)
+                                             | _ -> Flt (number.fltVal x - number.fltVal y)
+    static member (*) (x:number, y:number) = match (x, y) with
+                                             | Int x, Int y -> Int (x * y)
+                                             | _ -> Flt (number.fltVal x * number.fltVal y)
+    static member (/) (x:number, y:number) = match (x, y) with
+                                             | Int x, Int y -> Int (x / y)
+                                             | _ -> Flt (number.fltVal x / number.fltVal y)
+    static member (%) (x:number, y:number) = match (x, y) with
+                                             | Int x, Int y -> Int (x % y)
+                                             | _ -> Flt (number.fltVal x % number.fltVal y)
+    static member Pow (x:number, y:number) = match (x, y) with
+                                             | Int x, Int y -> Int (pown x y)
+                                             | _ -> Flt (number.fltVal x ** number.fltVal y)
+    static member (~-) (n:number) = match n with
+                                    | Int n -> Int -n
+                                    | Flt n -> Flt -n
+    static member (~+) (n:number) = match n with
+                                    | Int n -> Int +n
+                                    | Flt n -> Flt +n
+    static member Floor (n:number) = match n with
+                                     | Flt n -> Flt (Math.Floor(n))
+                                     | _ -> n
+
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
-    Add | Sub | Mul | Div | IntDiv
+    Add | Sub | Mul | Div | FlrDiv
 and log =
     LogN | LogOther
 
@@ -60,10 +91,10 @@ and scFloat(iStr, iVal, weight) =
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
 
-let rec scStr(remain : list<char>, word : string) =
+let rec scName(remain : list<char>, word : string) =
     match remain with
     c :: tail when isletterordigit c -> let cStr = (string)c
-                                        scStr(tail, word + cStr)
+                                        scName(tail, word + cStr)
     | _ -> (remain, word)
 
 let lexer input = 
@@ -73,7 +104,7 @@ let lexer input =
         | '+'::tail -> Arith Add :: scan tail
         | '-'::tail -> Arith Sub :: scan tail
         | '*'::tail -> Arith Mul :: scan tail
-        | '/'::'/'::tail -> Arith IntDiv :: scan tail
+        | '/'::'/'::tail -> Arith FlrDiv :: scan tail
         | '/'::tail -> Arith Div :: scan tail
         | '%'::tail -> Rem :: scan tail
         | 'e'::'^'::tail -> Exp :: scan tail
@@ -88,7 +119,7 @@ let lexer input =
         | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
-        | '='::tail -> Assign:: scan tail 
+        | '='::tail -> Assign:: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
@@ -96,7 +127,7 @@ let lexer input =
                                                                            Num (Flt iVal) :: scan iStr
                                       | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
-        | c :: tail when isletter c -> let (iStr, oStr) = scStr(tail, (string)c)
+        | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
                                        Var oStr :: scan iStr
         | _ -> raise lexError
     scan (str2lst input)
@@ -128,7 +159,7 @@ let parser tList =
         match tList with
         | Arith Mul :: tail -> (F >> Topt) tail
         | Arith Div :: tail -> (F >> Topt) tail
-        | Arith IntDiv :: tail -> (F >> Topt) tail
+        | Arith FlrDiv :: tail -> (F >> Topt) tail
         | Rem :: tail -> (F >> Topt) tail
         | _ -> tList
     and F tList = (NR >> Fopt) tList
@@ -162,68 +193,68 @@ let parseNeval tList =
     let rec E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
         match tList with
-        | Arith Add :: tail -> let (tLst, tval) = T tail
+        | Arith Add :: tail -> let (tLst, tval) = T tail 
                                Eopt (tLst, value + tval)
         | Arith Sub :: tail -> let (tLst, tval) = T tail
                                Eopt (tLst, value - tval)
         | _ -> (tList, value)
-    
     and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
         | Arith Mul :: tail -> let (tLst, tval) = F tail
                                Topt (tLst, value * tval)
         | Arith Div :: tail -> let (tLst, tval) = F tail
-                               if tval = 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
-        | Arith IntDiv :: tail -> let (tLst, tval) = F tail
-                                  if tval = 0.0 then raise divisionByZeroError else Topt (tLst, (float)((int)value / (int)tval))
+                               if tval = Int 0 || tval = Flt 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
+        | Arith FlrDiv :: tail -> let (tLst, tval) = F tail
+                                  if tval = Int 0 || tval = Flt 0.0 then raise divisionByZeroError else Topt (tLst, number.Floor(value / tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)                  
         | _ -> (tList, value)
-    
     and F tList = (NR >> Fopt) tList
     and Fopt (tList, value) =
         match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
-                         Fopt (tLst, (Math.Pow(value,tval)))
+                         Fopt (tLst, number.Pow(value, tval))
         | _ -> (tList, value)
-    
     and NR tList =
         match tList with
         | Arith Sub :: tail -> let (tList, tval) = NR tail
                                (tList, -tval)
-        | Num (Int value) :: tail -> (tail, (float)value)
-        | Num (Flt value) :: tail -> (tail, value)
+        | Arith Add :: tail -> let (tList, tval) = NR tail
+                               (tList, +tval)
+        | Num (Int value) :: tail -> (tail, Int value)
+        | Num (Flt value) :: tail -> (tail, Flt value)
         | Log LogN :: tail -> let (tLst, tval) = NR tail
-                              (tLst, (Math.Log((float) tval)))                          
+                              (tLst, Flt (Math.Log(number.fltVal(tval))))                          
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
                           | _ -> raise parseError
         | Exp :: tail -> let (tLst, tval) = NR tail
-                         (tLst, (Math.Exp((float) tval)))                  
+                         (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Math.Sin(tval*(Math.PI/180.0)))
+                              (tLst, Flt (Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Math.Cos(tval*(Math.PI/180.0)))
+                              (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
-                              match  checkAgainstTanList (tval * (Math.PI/180.0)) with
-                              | false -> raise tanUndefinedError
-                              | true -> (tLst, Math.Tan(tval * (Math.PI/180.0)))
+                              if checkAgainstTanList (number.fltVal(tval)) then 
+                                (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
+                              else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Math.Asin(tval*(Math.PI/180.0)))
+                               (tLst, Flt (Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Math.Acos(tval*(Math.PI/180.0)))
+                               (tLst, Flt (Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
-                               match checkBetweenAtanValues tval with 
-                               | false -> raise tanUndefinedError
-                               | true -> (tLst, Math.Atan(tval*(Math.PI/180.0)))
+                               if checkBetweenAtanValues (number.fltVal(tval)) then
+                                   (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
+                               else raise tanUndefinedError
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
         | _ -> raise parseError
     E tList
+
 
 let rec printTList (lst:list<terminal>) : list<string> = 
     match lst with
@@ -233,23 +264,24 @@ let rec printTList (lst:list<terminal>) : list<string> =
     | [] -> Console.Write("EOL\n")
             []
     
-let test (input:string, correctOut:float) =
+let test (input:string, correctOut) =
     let oList = lexer input
     let out = parseNeval oList
     if snd out = correctOut then true
-    else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input correctOut (snd out)
+    else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
          false
     
 let testInputs =
     printfn "Tests Start"
     if
-        test ("15+987", 1002.0) &&
-        test ("987-15", 972.0) &&
-        test ("15*987", 14805.0) &&
-        test ("8/2", 4.0) &&
-        test ("987/3", 329.0) &&
-        test ("1156.55+1.2", 1157.75) &&
-        test ("9/4", 2.25)
+        test ("15+987", Int 1002) &&
+        test ("987-15", Int 972) &&
+        test ("15*987", Int 14805) &&
+        test ("5/2", Int 2) &&
+        test ("5.0/2", Flt 2.5) &&
+        test ("1156.55+1.2", Flt 1157.75) &&
+        test ("9%4", Int 1) &&
+        test ("-2*3^2", Int -18)
         then printfn "All tests passed"
         else printfn "Some of the tests failed"
         
