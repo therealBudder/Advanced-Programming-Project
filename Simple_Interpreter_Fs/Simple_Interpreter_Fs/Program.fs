@@ -288,7 +288,7 @@ let testInputs =
 let guiIntegration (inputString: string) = 
     let oList = lexer inputString
     let Out = parseNeval oList
-    snd Out
+    number.fltVal(snd Out)
         
     
 
