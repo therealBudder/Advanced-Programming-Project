@@ -225,7 +225,9 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Log LogN :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Flt (Math.Log(number.fltVal(tval))))                          
+                              (tLst, Flt (Math.Log(number.fltVal(tval))))
+        //| Log LogOther :: tail -> let (tLst, tval) = NR tail
+        //                          (tLst, Flt (Math.Log(number.fltVal(tval))))                      
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
