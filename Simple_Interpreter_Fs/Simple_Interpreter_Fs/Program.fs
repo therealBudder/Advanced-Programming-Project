@@ -262,6 +262,10 @@ let parseNeval tList =
                                      (tLst, Flt 0)  
                                    else (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
                                else raise tanUndefinedError
+        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
+                                                                         variables <- variables.Remove(name)
+                                                                         variables <- variables.Add(name, tVal)
+                                                                         (tail, tVal)
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
