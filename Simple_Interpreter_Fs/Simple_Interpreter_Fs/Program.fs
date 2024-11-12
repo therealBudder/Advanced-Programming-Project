@@ -226,8 +226,8 @@ let parseNeval tList =
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Log LogN :: tail -> let (tLst, tval) = NR tail
                               (tLst, Flt (Math.Log(number.fltVal(tval))))
-        //| Log LogOther :: tail -> let (tLst, tval) = NR tail
-        //                          (tLst, Flt (Math.Log(number.fltVal(tval))))                      
+        //| Log LogOther :: Num:: tail -> let (tLst, tval) = NR tail
+        //                                (tLst, Flt (Math.Log(number.fltVal(tval))))                      
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
@@ -235,20 +235,32 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Flt (Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))))
+                              if Math.Round((Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
+                               (tLst, Flt 0) 
+                              else (tLst, Flt (Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))
+                              if Math.Round((Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
+                                (tLst, Flt 0) 
+                              else (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
-                              if checkAgainstTanList (number.fltVal(tval)) then 
-                                (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
+                              if checkAgainstTanList (number.fltVal(tval)) then
+                                if Math.Round((Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
+                                  (tLst, Flt 0) 
+                                else (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Flt (Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))))
+                               if Math.Round ((Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
+                                 (tLst, Flt 0)
+                               else (tLst, Flt (Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               (tLst, Flt (Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))))
+                               if Math.Round((Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
+                                 (tLst, Flt 0)  
+                               else (tLst, Flt (Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenAtanValues (number.fltVal(tval)) then
-                                   (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
+                                   if Math.Round((Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))),10) = 0 then 
+                                     (tLst, Flt 0)  
+                                   else (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
                                else raise tanUndefinedError
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
@@ -290,7 +302,7 @@ let testInputs =
 let guiIntegration (inputString: string) = 
     let oList = lexer inputString
     let Out = parseNeval oList
-    number.fltVal(snd Out)
+    snd Out
         
     
 
