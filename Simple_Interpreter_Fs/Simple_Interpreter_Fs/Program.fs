@@ -74,9 +74,14 @@ let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
 let divisionByZeroError = System.Exception("Division by Zero Detected")
 let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
+let logInputError = System.Exception("Input Error By User for function Log and Ln")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
+let checkPositive (x:float) =
+    if x > 0 then true else false
+let checkLogEdgeCase (newBase:float) =
+    if (newBase = 1) then true else false  
 let checkBetweenAtanValues(x:float) =
     let out = fun input -> (input >= -(Math.PI/2.0) && input <= (Math.PI/2.0))
     out x 
@@ -225,9 +230,13 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Log LogN :: tail -> let (tLst, tval) = NR tail
-                              (tLst, Flt (Math.Log(number.fltVal(tval))))
-        | Log LogOther :: tail -> let (tLst, tval) = NR tail 
-                                  (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval))))                      
+                              match checkPositive (number.fltVal(tval)) with
+                              | true -> (tLst, Flt (Math.Log(number.fltVal(tval))))
+                              | false -> raise logInputError                    
+        | Log LogOther :: tail -> let (tLst, tval) = NR tail
+                                  match checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))  with
+                                  | true ->  (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
+                                  | false -> raise logInputError
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
