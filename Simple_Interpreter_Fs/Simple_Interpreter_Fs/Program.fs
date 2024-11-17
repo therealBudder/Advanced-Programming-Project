@@ -79,9 +79,9 @@ let logInputError = System.Exception("Input Error By User for function Log and L
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
 let checkPositive (x:float) =
-    if x > 0 then true else false
+    if x > 0.0 then true else false
 let checkLogEdgeCase (newBase:float) =
-    if (newBase = 1) then true else false  
+    if (newBase = 1.0) then true else false  
 let checkBetweenAtanValues(x:float) =
     let out = fun input -> (input >= -(Math.PI/2.0) && input <= (Math.PI/2.0))
     out x 
@@ -244,31 +244,31 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
-                               (tLst, Flt 0) 
+                              if Math.Round((Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                               (tLst, Flt 0.0) 
                               else (tLst, Flt (Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
-                                (tLst, Flt 0) 
+                              if Math.Round((Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                                (tLst, Flt 0.0) 
                               else (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               if checkAgainstTanList (number.fltVal(tval)) then
-                                if Math.Round((Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
-                                  (tLst, Flt 0) 
+                                if Math.Round((Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                                  (tLst, Flt 0.0) 
                                 else (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round ((Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
-                                 (tLst, Flt 0)
+                               if Math.Round ((Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                                 (tLst, Flt 0.0)
                                else (tLst, Flt (Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round((Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0 then
-                                 (tLst, Flt 0)  
+                               if Math.Round((Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                                 (tLst, Flt 0.0)  
                                else (tLst, Flt (Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenAtanValues (number.fltVal(tval)) then
-                                   if Math.Round((Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))),10) = 0 then 
-                                     (tLst, Flt 0)  
+                                   if Math.Round((Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))),10) = 0.0 then 
+                                     (tLst, Flt 0.0)  
                                    else (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
                                else raise tanUndefinedError
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
