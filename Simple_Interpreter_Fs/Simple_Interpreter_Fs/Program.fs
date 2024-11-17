@@ -66,15 +66,17 @@ let isletterordigit c = System.Char.IsLetterOrDigit c
 let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
 
 
-let lexError = System.Exception("error: invalid symbol in expression")
-let varError = System.Exception("error: incorrect var assignment")
+let lexError = System.Exception("invalid symbol in expression")
+let varError = System.Exception("incorrect var assignment")
 let intVal (c:char) = (int)((int)c - (int)'0')
 let floatVal (c:char) = (float)((int)c - (int)'0')
 let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
-let divisionByZeroError = System.Exception("Division by Zero Detected")
+let divisionByZeroError = System.Exception("Division by zero is undefined")
 let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
 let logInputError = System.Exception("Input Error By User for function Log and Ln")
+let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
+let undefinedVarError = System.Exception("Syntax error Variable is not defined")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -134,7 +136,8 @@ let lexer input =
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
                                        Var oStr :: scan iStr
-        | _ -> raise lexError
+        | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
+               raise lexError
     scan (str2lst input)
 
 let getInputString() : string = 
@@ -188,7 +191,7 @@ let parser tList =
         | Trig ATan :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
-                          | _ -> raise parseError
+                          | _ -> raise unclosedBracketsError
         | _ -> raise parseError
     E tList
 
@@ -230,17 +233,16 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Log LogN :: tail -> let (tLst, tval) = NR tail
-                              match checkPositive (number.fltVal(tval)) with
-                              | true -> (tLst, Flt (Math.Log(number.fltVal(tval))))
-                              | false -> raise logInputError                    
+                              if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
+                              else raise logInputError                  
         | Log LogOther :: tail -> let (tLst, tval) = NR tail
-                                  match checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))  with
-                                  | true ->  (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
-                                  | false -> raise logInputError
+                                  if checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))
+                                  then (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
+                                  else raise logInputError
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
-                          | _ -> raise parseError
+                          | _ -> raise unclosedBracketsError
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
@@ -279,7 +281,11 @@ let parseNeval tList =
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
-        | _ -> raise parseError
+        | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
+                                                                     raise undefinedVarError
+        | _ -> Console.WriteLine("Unexpected syntax at:")
+               for t in tList do Console.Write(t.ToString() + " ")
+               raise parseError
     E tList
 
 
