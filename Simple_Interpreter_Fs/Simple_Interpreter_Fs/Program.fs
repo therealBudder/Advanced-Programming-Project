@@ -8,6 +8,7 @@
 open System
 
 type terminal = 
+    | Func
     | Rem
     | Pow
     | Exp
@@ -126,6 +127,7 @@ let lexer input =
         | 's'::'i'::'n'::tail -> Trig Sin :: scan tail
         | 'c'::'o'::'s'::tail -> Trig Cos :: scan tail
         | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
+        | 'f'::'n'::tail -> Func :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
@@ -353,6 +355,8 @@ let rec main' argv  =
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
     | _ -> let oList = lexer input
            let sList = printTList oList;
+           Console.ReadLine();
+           
 
            //let pList = printTList (parser oList)
            let Out = parseNeval oList
