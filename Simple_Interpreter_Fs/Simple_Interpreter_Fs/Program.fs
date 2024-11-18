@@ -289,8 +289,9 @@ let parseNeval tList =
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
                                                                      raise undefinedVarError
 
-        | Func :: Var name :: tail -> let (params, tList) = P ([]:terminal, tail)
-                                      functions <- functions.Add(name, (params, tList))
+        | Func :: Var name :: tail -> let (paramList, tList) = P ([], tail)
+                                      functions <- functions.Add(name, (paramList, tList))
+                                      Console.WriteLine(functions[name])   //test
                                       (tList, (Int)0)
 
         | _ -> Console.WriteLine("Unexpected syntax at:")
@@ -298,7 +299,7 @@ let parseNeval tList =
                raise parseError
     and P (pList, tList) =
         match tList with
-        | Var name :: tail -> P (pList::Var, tail)
+        | Var name :: tail -> P ((List.append pList [Var name]), tail)
         | Assign :: tail -> (pList, tail)
         | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
