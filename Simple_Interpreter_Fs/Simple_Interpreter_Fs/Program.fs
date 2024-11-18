@@ -145,14 +145,21 @@ let getInputString() : string =
     Console.ReadLine()
 
 // Grammar in BNF:
+
+//<trig> ::= "Sin" | "Cos" | "Tan" | "Asin" | "Acos" | "Atan"
+//<number> ::= "Flt" | "Int"
+//<log> ::= "logN" | "logOther"
+
 // version 1.0
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <F> <Topt>
 // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> ||<empty>
 // <F>        ::= <NR> <Fopt>
-// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | "Sin" <F> | "Cos" <F> | "Tan" <F> | "Asin" <F> | "Acos" <F> | "ATan" <F> | <empty> 
-// <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | "Num" <value> | "Flt" <value> | "(" <E> ")"
+// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <trig> <F> | <log> <F> | "Exp" <F> |<empty> 
+// <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | <number> <value> | "(" <E> ")"
+
+
 
 
 let parser tList = 
