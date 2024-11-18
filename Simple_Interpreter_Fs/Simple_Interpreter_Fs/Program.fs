@@ -8,7 +8,7 @@
 open System
 
 type terminal = 
-    | Func
+    | Func  //NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! 
     | Rem
     | Pow
     | Exp
@@ -127,7 +127,7 @@ let lexer input =
         | 's'::'i'::'n'::tail -> Trig Sin :: scan tail
         | 'c'::'o'::'s'::tail -> Trig Cos :: scan tail
         | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
-        | 'f'::'n'::tail -> Func :: scan tail
+        | 'f'::'n'::tail -> Func :: scan tail //NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! NEW! 
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
@@ -200,6 +200,7 @@ let parser tList =
     E tList
 
 let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
+let mutable functions = Map.empty   //secondary table, to be merged with variables as a true symbol table
 
 let parseNeval tList = 
     let rec E tList = (T >> Eopt) tList
@@ -287,7 +288,19 @@ let parseNeval tList =
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
                                                                      raise undefinedVarError
+
+        | Func :: Var name :: tail -> let (params, tList) = P ([]:terminal, tail)
+                                      functions <- functions.Add(name, (params, tList))
+                                      (tList, (Int)0)
+
         | _ -> Console.WriteLine("Unexpected syntax at:")
+               for t in tList do Console.Write(t.ToString() + " ")
+               raise parseError
+    and P (pList, tList) =
+        match tList with
+        | Var name :: tail -> P (pList::Var, tail)
+        | Assign :: tail -> (pList, tail)
+        | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
     E tList
@@ -354,9 +367,7 @@ let rec main' argv  =
     match str2lst input with
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
     | _ -> let oList = lexer input
-           let sList = printTList oList;
-           Console.ReadLine();
-           
+           let sList = printTList oList;           
 
            //let pList = printTList (parser oList)
            let Out = parseNeval oList
