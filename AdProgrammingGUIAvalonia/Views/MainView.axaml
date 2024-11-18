@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AdProgrammingGUIAvalonia.ViewModels"
+			 xmlns:oxy="using:OxyPlot.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AdProgrammingGUIAvalonia.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -40,5 +41,15 @@
 				<Button Name="assignmentBtn" Grid.Row="0" Grid.Column="8" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5" ToolTip.Tip="Assignment.&#x0a;Usage:&#x0a;{value} = {value}" Click="ButtonClicked">=</Button>
 			</Grid>
 		</Grid>
+		<oxy:Plot Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Title="Test plot">
+			<oxy:Plot.Axes>
+				<oxy:LinearAxis Position="Bottom" Minimum="-20" Maximum="80" PositionAtZeroCrossing="True" />
+				<oxy:LinearAxis Position="Left" Minimum="-10" Maximum="10" PositionAtZeroCrossing="True"/>
+			</oxy:Plot.Axes>
+			<oxy:Plot.Series>
+				<oxy:LineSeries ItemsSource="{Binding Points}"/>
+			</oxy:Plot.Series>
+		</oxy:Plot>
+
 	</Grid>
 </UserControl>

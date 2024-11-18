@@ -172,7 +172,7 @@ public partial class MainView : UserControl
     {
         //First send the equation through to the F# parser
         //Then retrieve the result from the parser, and return it
-        double result;
+        Program.number result;
         try
         {
             result = Program.guiIntegration(equation);
@@ -252,6 +252,5 @@ public partial class MainView : UserControl
             equationBox.Focus();
             equationBox.CaretIndex = selection;
         }
-
     }
 }

@@ -6,5 +6,7 @@
 
     <Application.Styles>
         <FluentTheme />
-    </Application.Styles>
+		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
+		<!-- Add the line below to get OxyPlot UI theme applied. -->
+	</Application.Styles>
 </Application>
