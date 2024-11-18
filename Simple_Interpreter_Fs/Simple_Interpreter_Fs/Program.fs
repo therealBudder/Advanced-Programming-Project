@@ -55,7 +55,7 @@ and number =
                                      | _ -> n
 
 and trig =
-     Sin | Cos | Tan | ASin | ACos | ATan
+    Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
     Add | Sub | Mul | Div | FlrDiv
 and log =
@@ -80,6 +80,9 @@ let tanUndefinedError = System.Exception("Tan call will result in undefined beha
 let logInputError = System.Exception("Input Error By User for function Log and Ln")
 let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
 let undefinedVarError = System.Exception("Syntax error Variable is not defined")
+let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
+let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
+
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -202,6 +205,11 @@ let parser tList =
 let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
 let mutable functions = Map.empty   //secondary table, to be merged with variables as a true symbol table
 
+let mutable symbolTable = Map.empty
+type BindingType =
+    | Variable
+    | Function
+
 let parseNeval tList = 
     let rec E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
@@ -278,22 +286,64 @@ let parseNeval tList =
                                      (tLst, Flt 0.0)  
                                    else (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
                                else raise tanUndefinedError
+        //------------------------------------------------------------------------------------------------------------------------
+        //VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES
+        //-----------------------------------------------------------------------------------------------------------------------
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
                                                                          variables <- variables.Remove(name)
                                                                          variables <- variables.Add(name, tVal)
+                                                                         
+                                                                         symbolTable <- symbolTable.Remove(name)
+                                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                                         Console.WriteLine(symbolTable[name])   //test
+
                                                                          (tail, tVal)
+
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
+
+                                        symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                        Console.WriteLine(symbolTable[name])   //test
+
                                         (tail, tVal)
-        | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
-        | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
-                                                                     raise undefinedVarError
+        //-----------------------------------------------------------------------------------------------------------------------
+        //FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
+        //-----------------------------------------------------------------------------------------------------------------------
+        | Func :: Var name :: tail when functions.ContainsKey(name) ->  let (paramList, tList) = P ([], tail)
+                                                                        functions <- functions.Remove(name)
+                                                                        functions<- functions.Add(name, (paramList, tList))
+
+                                                                        symbolTable <- symbolTable.Remove(name)
+                                                                        symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                                                        Console.WriteLine(symbolTable[name])   //test
+                                                                        
+                                                                        (tList, (Int)0)
 
         | Func :: Var name :: tail -> let (paramList, tList) = P ([], tail)
                                       functions <- functions.Add(name, (paramList, tList))
                                       Console.WriteLine(functions[name])   //test
-                                      (tList, (Int)0)
+                                      
+                                      symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                      Console.WriteLine(symbolTable[name])   //test
 
+                                      (tList, (Int)0)
+        //-----------------------------------------------------------------------------------------------------------------------
+        //CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING 
+        //-----------------------------------------------------------------------------------------------------------------------
+        | Var name :: tail when symbolTable.ContainsKey(name) -> let (bType, pList, tList) = symbolTable.[name]
+                                                                 match bType with
+                                                                 | Variable -> match tList.Head with
+                                                                               | Num value -> (tList, value)
+                                                                               | _ -> raise NaNError
+                                                                 | _ -> Console.WriteLine("Invalid BindingType in table")
+                                                                        raise bindingTypeError
+
+        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
+                                                                       raise undefinedVarError
+        //| Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
+        //| Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
+        //                                                             raise undefinedVarError
+        
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
