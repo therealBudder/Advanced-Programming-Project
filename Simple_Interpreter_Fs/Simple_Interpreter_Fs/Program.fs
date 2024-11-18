@@ -256,7 +256,7 @@ let parseNeval tList =
                                 (tLst, Flt 0.0) 
                               else (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
-                              if checkAgainstTanList (number.fltVal(tval)) then
+                              if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
                                 if Math.Round((Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
                                   (tLst, Flt 0.0) 
                                 else (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
