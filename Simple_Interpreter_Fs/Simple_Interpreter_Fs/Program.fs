@@ -18,6 +18,7 @@ type terminal =
     | Var of string
     | Assign
     | Trig of trig
+    | Null
 and number =
     Int of int | Flt of float
     static member fltVal n = match n with
@@ -97,12 +98,26 @@ and scFloat(iStr, iVal, weight) =
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
+let isMathFunc(inString) =
+    match inString with
+    | "ln"  -> Log LogN
+    | "log" -> Log LogOther
+    | "asin" -> Trig ASin
+    | "acos" -> Trig ACos
+    | "atan" -> Trig ATan
+    | "sin" -> Trig Sin
+    | "cos" -> Trig Cos
+    | "tan" -> Trig Tan
+    | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
     match remain with
     c :: tail when isletterordigit c -> let cStr = (string)c
                                         scName(tail, word + cStr)
     | _ -> (remain, word)
+let getFloatRadian value =
+     number.fltVal(value) * (Math.PI / 180.0)
+     
 
 let lexer input = 
     let rec scan input =
@@ -116,14 +131,6 @@ let lexer input =
         | '%'::tail -> Rem :: scan tail
         | 'e'::'^'::tail -> Exp :: scan tail
         | '^'::tail -> Pow :: scan tail
-        | 'l'::'n'::tail -> Log LogN :: scan tail
-        | 'l'::'o'::'g'::tail -> Log LogOther :: scan tail 
-        | 'a'::'s'::'i'::'n'::tail -> Trig ASin :: scan tail
-        | 'a'::'c'::'o'::'s'::tail -> Trig ACos :: scan tail
-        | 'a'::'t'::'a'::'n'::tail -> Trig ATan :: scan tail
-        | 's'::'i'::'n'::tail -> Trig Sin :: scan tail
-        | 'c'::'o'::'s'::tail -> Trig Cos :: scan tail
-        | 't'::'a'::'n'::tail -> Trig Tan :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
@@ -135,7 +142,9 @@ let lexer input =
                                       | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
-                                       Var oStr :: scan iStr
+                                       let result = isMathFunc oStr
+                                       if result <> Null then result :: scan iStr else Var oStr :: scan iStr
+                                       
         | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
                raise lexError
     scan (str2lst input)
@@ -253,32 +262,32 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
-                               (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Sin(number.fltVal(tval) * (Math.PI / 180.0))))
-        | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                              if Math.Round(Math.Sin(getFloatRadian tval), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Cos(number.fltVal(tval) * (Math.PI / 180.0))))                                
+                              else (tLst, Flt (Math.Sin(getFloatRadian tval)))
+        | Trig Cos :: tail -> let (tLst, tval) = NR tail
+                              if Math.Round(Math.Cos(getFloatRadian tval), 10) = 0.0 then
+                                (tLst, Flt 0.0) 
+                              else (tLst, Flt (Math.Cos(getFloatRadian tval)))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
-                                if Math.Round((Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                                if Math.Round((Math.Tan(getFloatRadian tval)), 10) = 0.0 then
                                   (tLst, Flt 0.0) 
-                                else (tLst, Flt (Math.Tan(number.fltVal(tval) * (Math.PI / 180.0))))
+                                else (tLst, Flt (Math.Tan(getFloatRadian tval)))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round ((Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                               if Math.Round ((Math.Asin(getFloatRadian tval)), 10) = 0.0 then
                                  (tLst, Flt 0.0)
-                               else (tLst, Flt (Math.Asin(number.fltVal(tval) * (Math.PI / 180.0))))
+                               else (tLst, Flt (Math.Asin(getFloatRadian tval)))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round((Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))), 10) = 0.0 then
+                               if Math.Round((Math.Acos(getFloatRadian tval)), 10) = 0.0 then
                                  (tLst, Flt 0.0)  
-                               else (tLst, Flt (Math.Acos(number.fltVal(tval) * (Math.PI / 180.0))))
+                               else (tLst, Flt (Math.Acos(getFloatRadian tval)))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenAtanValues (number.fltVal(tval)) then
-                                   if Math.Round((Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))),10) = 0.0 then 
+                                   if Math.Round((Math.Atan(getFloatRadian tval)),10) = 0.0 then 
                                      (tLst, Flt 0.0)  
-                                   else (tLst, Flt (Math.Atan(number.fltVal(tval) * (Math.PI / 180.0))))
+                                   else (tLst, Flt (Math.Atan(getFloatRadian tval)))
                                else raise tanUndefinedError
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
                                                                          variables <- variables.Remove(name)
