@@ -98,7 +98,7 @@ and scFloat(iStr, iVal, weight) =
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)
-let isMathFunc(inString) =
+let isReservedWord(inString) =
     match inString with
     | "ln"  -> Log LogN
     | "log" -> Log LogOther
@@ -142,7 +142,7 @@ let lexer input =
                                       | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
-                                       let result = isMathFunc oStr
+                                       let result = isReservedWord oStr
                                        if result <> Null then result :: scan iStr else Var oStr :: scan iStr
                                        
         | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
