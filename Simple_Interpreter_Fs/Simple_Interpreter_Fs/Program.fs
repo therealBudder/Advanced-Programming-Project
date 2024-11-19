@@ -19,6 +19,8 @@ type terminal =
     | Assign
     | Trig of trig
     | Null
+    | Pi
+    | Abs
 and number =
     Int of int | Flt of float
     static member fltVal n = match n with
@@ -51,7 +53,9 @@ and number =
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
                                      | _ -> n
-
+    static member Abs (n:number) = match n with
+                                   | Int n -> Int (Math.Abs(n))
+                                   | Flt n -> Flt (Math.Abs(n))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
@@ -108,6 +112,8 @@ let isReservedWord(inString) =
     | "sin" -> Trig Sin
     | "cos" -> Trig Cos
     | "tan" -> Trig Tan
+    | "pi" -> Pi
+    | "abs" -> Abs
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -248,6 +254,8 @@ let parseNeval tList =
                                (tList, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
+        | Abs :: tail -> let (tLst, tval) = NR tail
+                         (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
                               if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
                               else raise logInputError                  
@@ -297,6 +305,7 @@ let parseNeval tList =
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
+        | Pi :: tail -> (tail, Flt Math.PI)
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
                                                                      raise undefinedVarError
         | _ -> Console.WriteLine("Unexpected syntax at:")
