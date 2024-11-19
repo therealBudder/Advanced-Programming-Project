@@ -9,11 +9,19 @@ using System;
 using System.Linq;
 
 using OxyPlot;
+using AdProgrammingGUIAvalonia.ViewModels;
+using OxyPlot.Avalonia;
+
+using System.Collections.Generic;
+using static Microsoft.FSharp.Core.ByRefKinds;
 
 namespace AdProgrammingGUIAvalonia.Views;
 
 public partial class MainView : UserControl
 {
+    MainViewModel mvm = new MainViewModel();
+    List<DataPoint> points = new List<DataPoint>();
+
     public MainView()
     {
         InitializeComponent();
@@ -92,7 +100,81 @@ public partial class MainView : UserControl
                     InsertSymbol("=");
                 }
                 break;
+            case "plot":
+                {
+                    CreatePlot();
+                }
+                break;
+            case "resetPlot":
+                {
+                    ResetPlot();
+                }
+                break;
+        }
+    }
 
+    private void CreatePlot()
+    {
+        ResetPlot();
+        var plot = this.Find<Plot>("oPlot") as Plot;
+        var xMinInputBox = this.Find<TextBox>("xMinInput") as TextBox;
+        var xMaxInputBox = this.Find<TextBox>("xMaxInput") as TextBox;
+        var yExprInputBox = this.Find<TextBox>("yExprInput") as TextBox;
+        var pointCountInputBox = this.Find<TextBox>("pointCountInput") as TextBox;
+
+        string xMinInput = "-10", xMaxInput = "10", yExprInput = "y=x", pointCountInput = "2";
+
+        if (xMinInputBox != null)
+        {
+            xMinInput = xMinInputBox.Text ?? "-10";
+        }
+        if (xMaxInputBox != null)
+        {
+            xMaxInput = xMaxInputBox.Text ?? "10";
+        }
+        if (yExprInputBox != null)
+        {
+            yExprInput = yExprInputBox.Text ?? "y=x";
+        }
+        if (pointCountInputBox != null)
+        {
+            pointCountInput = pointCountInputBox.Text ?? "2";
+        }
+
+        if (plot != null)
+        {
+            //mvm.Points.Add(new DataPoint(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput)));
+            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToDouble(pointCountInput));
+            plot.Series[0].ItemsSource = mvm.Points;
+            plot.InvalidatePlot(true);
+        }
+    }
+
+    private void CalculateY(double xMin, double xMax, string yExpr, double points)
+    {
+        //double step = (xMax - xMin) / (points - 1);
+        double step;
+        step = Program.number.fltVal(Program.guiIntegration(((xMax - xMin) / (points - 1)).ToString()));
+        Program.number y;
+        double currentX = xMin;
+        for (double point = 0; point < points; point++)
+        {
+            currentX = xMin + point * step;
+            Program.guiIntegration("x=" + currentX.ToString());
+            y = Program.guiIntegration("y=" + yExpr);
+            Debug.WriteLine("x = " + currentX.ToString() + ", y = " + y.ToString());
+            mvm.Points.Add(new DataPoint(Convert.ToDouble(currentX), Program.number.fltVal(y)));
+        }
+    }
+
+    private void ResetPlot()
+    {
+        var plot = this.Find<Plot>("oPlot") as Plot;
+        if (plot != null)
+        {
+            mvm.Points.Clear();
+            plot.Series[0].ItemsSource = mvm.Points;
+            plot.InvalidatePlot(true);
         }
     }
 
