@@ -149,6 +149,8 @@ let strVal (c:char) = (string)c
 let parseError = System.Exception("Parser error")
 let divisionByZeroError = System.Exception("Division by zero is undefined")
 let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
+let sinUndefinedError = System.Exception("Sin call will result in undefined behavior.")
+let cosUndefinedError = System.Exception("Cos call will result in undefined behavior.")
 let logInputError = System.Exception("Input Error By User for function Log and Ln")
 let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
 let undefinedVarError = System.Exception("Syntax error Variable is not defined")
@@ -159,8 +161,8 @@ let checkPositive (x:float) =
     if x > 0.0 then true else false
 let checkLogEdgeCase (newBase:float) =
     if (newBase = 1.0) then true else false  
-let checkBetweenAtanValues(x:float) =
-    let out = fun input -> (input >= -(Math.PI/2.0) && input <= (Math.PI/2.0))
+let checkBetweenATrigValues(x:float) =
+    let out = fun input -> (input >= -(1.0) && input <= (1.0))
     out x 
 let rec scInt(iStr, iVal) =
     match iStr with
@@ -186,7 +188,7 @@ and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
     let rec burnIStr inCharList =
         match inCharList with
         | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
-        | _ -> (inCharList)    
+        | _ -> (inCharList)
     (upper, lower, (burnIStr iStr))               
 
 let isReservedWord(inString) =
@@ -229,8 +231,6 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
-        | ':'::tail -> scan tail
-        | '.'::tail -> scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
@@ -379,19 +379,21 @@ let parseNeval tList =
                                 else (tLst, Flt (getFloatDegrees(Math.Tan(getFloatRadian tval))))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round ((getFloatDegrees(Math.Asin(getFloatRadian tval))), 10) = 0.0 then
+                               if checkBetweenATrigValues (number.fltVal(tval)) then 
+                                if Math.Round ((getFloatDegrees(Math.Asin(getFloatRadian tval))), 10) = 0.0 then
                                  (tLst, Flt 0.0)
-                               else (tLst, Flt (getFloatDegrees(Math.Asin(getFloatRadian tval))))
+                                else (tLst, Flt (getFloatDegrees(Math.Asin(getFloatRadian tval))))
+                               else raise sinUndefinedError
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round(getFloatDegrees((Math.Acos(getFloatRadian tval))), 10) = 0.0 then
+                               if checkBetweenATrigValues (number.fltVal(tval)) then 
+                                if Math.Round(getFloatDegrees((Math.Acos(getFloatRadian tval))), 10) = 0.0 then
                                  (tLst, Flt 0.0)  
-                               else (tLst, Flt (getFloatDegrees(Math.Acos(getFloatRadian tval))))
+                                else (tLst, Flt (getFloatDegrees(Math.Acos(getFloatRadian tval))))
+                               else raise cosUndefinedError 
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
-                               if checkBetweenAtanValues (number.fltVal(tval)) then
-                                   if Math.Round(getFloatDegrees(Math.Atan(getFloatRadian tval)),10) = 0.0 then 
-                                     (tLst, Flt 0.0)  
-                                   else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
-                               else raise tanUndefinedError
+                               if Math.Round(getFloatDegrees(Math.Atan(getFloatRadian tval)),10) = 0.0 then 
+                                 (tLst, Flt 0.0)  
+                               else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
                                                                          variables <- variables.Remove(name)
                                                                          variables <- variables.Add(name, tVal)
