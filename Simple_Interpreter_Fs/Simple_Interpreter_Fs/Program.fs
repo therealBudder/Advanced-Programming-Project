@@ -234,7 +234,7 @@ let lexer input =
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
-                                      | '.' :: c :: ':' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(iVal, (getListPart(':',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
+                                      | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
                                                                                                                 Num (Rat (snd iVal,snd iVal2)) :: scan iStr 
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
