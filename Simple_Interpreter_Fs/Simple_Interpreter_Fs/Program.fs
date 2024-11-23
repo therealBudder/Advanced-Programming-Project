@@ -24,6 +24,8 @@ type terminal =
     | Assign
     | Trig of trig
     | Null
+    | Pi
+    | Abs
 and number =
     Int of int | Flt of float | Rat of float * float
     static member fltVal n = match n with
@@ -120,7 +122,10 @@ and number =
                                      | Flt n -> Flt (Math.Floor(n))
                                      | Rat (upper, lower) -> Flt (Math.Floor(upper/lower))
                                      | _ -> n
-
+    static member Abs (n:number) = match n with
+                                   | Int n -> Int (Math.Abs(n))
+                                   | Flt n -> Flt (Math.Abs(n))
+                                   | Rat (upper, lower) -> Flt (Math.Abs(upper/lower))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
@@ -183,7 +188,8 @@ and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
         | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
         | _ -> (inCharList)    
     (upper, lower, (burnIStr iStr))               
-let isMathFunc(inString) =
+
+let isReservedWord(inString) =
     match inString with
     | "ln"  -> Log LogN
     | "log" -> Log LogOther
@@ -193,6 +199,8 @@ let isMathFunc(inString) =
     | "sin" -> Trig Sin
     | "cos" -> Trig Cos
     | "tan" -> Trig Tan
+    | "pi" -> Pi
+    | "abs" -> Abs
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -234,7 +242,7 @@ let lexer input =
                                       | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
-                                       let result = isMathFunc oStr
+                                       let result = isReservedWord oStr
                                        if result <> Null then result :: scan iStr else Var oStr :: scan iStr
                                        
         | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
@@ -341,6 +349,8 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Num (Rat (upper, lower)) :: tail -> (tail, Flt (number.fltVal (Rat (upper, lower))))
+        | Abs :: tail -> let (tLst, tval) = NR tail
+                         (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
                               if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
                               else raise logInputError                  
@@ -390,6 +400,7 @@ let parseNeval tList =
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
+        | Pi :: tail -> (tail, Flt Math.PI)
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
                                                                      raise undefinedVarError
         | _ -> Console.WriteLine("Unexpected syntax at:")
