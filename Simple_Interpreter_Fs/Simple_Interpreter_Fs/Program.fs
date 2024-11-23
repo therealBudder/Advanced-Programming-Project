@@ -5,6 +5,11 @@
 
 open System
 
+let rec squareRoot ((inputValue:float), (power:float)) =
+   match power with
+   power when power > 1 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
+   | _ -> inputValue  
+
 type terminal = 
     | Rem
     | Pow
@@ -20,36 +25,100 @@ type terminal =
     | Trig of trig
     | Null
 and number =
-    Int of int | Flt of float
+    Int of int | Flt of float | Rat of float * float
     static member fltVal n = match n with
                              | Flt f -> f
                              | Int i -> float i
+                             | Rat (upper,lower) -> upper/lower 
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
+                                               | Rat (upper, lower), Int y ->
+                                                   Rat (upper + lower * float y, lower)
+                                               | Int y, Rat (upper, lower) ->
+                                                   Rat (upper + lower * float y, lower)    
+                                               | Rat (upper, lower), Flt y ->
+                                                   Rat (upper + lower * y, lower)
+                                               | Flt y, Rat (upper, lower) ->
+                                                   Rat (upper + lower * y, lower)    
+                                               | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Rat (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
+                                             | Rat (upper, lower), Int y ->
+                                                   Rat (upper - lower * float y, lower)
+                                             | Int y, Rat (upper, lower) ->
+                                                   Rat (upper - lower * float y, lower)      
+                                             | Rat (upper, lower), Flt y ->
+                                                   Rat (upper - lower * y, lower)
+                                             | Flt y, Rat (upper, lower) ->
+                                                   Rat (upper - lower * y, lower)    
+                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Rat (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
+                                             | Rat (upper, lower), Int y ->
+                                                   Rat (upper * float y, lower)
+                                             | Int y, Rat (upper, lower) ->
+                                                   Rat (upper * float y, lower)      
+                                             | Rat (upper, lower), Flt y ->
+                                                   Rat (upper * y, lower)
+                                             | Flt y, Rat (upper, lower) ->
+                                                   Rat (upper * y, lower)      
+                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Rat (upper * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
+                                             | Rat (upper, lower), Int y ->
+                                                   Rat (upper, lower * float y)
+                                             | Int y, Rat (upper, lower) ->
+                                                   Rat (lower *  float y, upper)      
+                                             | Rat (upper, lower), Flt y ->
+                                                   Rat (upper, lower * y)
+                                             | Flt y, Rat (upper, lower) ->
+                                                   Rat (lower * y, upper)      
+                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Rat (upper * lowerTwo, lower*upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
+                                             | Rat (upper, lower), Int y ->
+                                                   Flt ((upper/ lower) % float y)
+                                             | Int y, Rat (upper, lower) ->
+                                                   Flt ((lower * float y) % upper)
+                                             | Rat (upper, lower), Flt y ->
+                                                   Flt ((upper/ lower) % y)
+                                             | Flt y, Rat (upper, lower) ->
+                                                   Flt ((lower * y) % upper)      
+                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Flt ((upper * lowerTwo / lower) % upperTwo)       
                                              | _ -> Flt (number.fltVal x % number.fltVal y)
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
+                                             | Rat (upper, lower), Int y ->
+                                                   Rat (Math.Pow(upper, y), Math.Pow(lower, y))
+                                             | Int y, Rat (upper, lower) ->
+                                                   Int (pown ((int)(squareRoot(y, lower))) ((int)upper))
+                                             | Rat (upper, lower), Flt y ->
+                                                   Rat (Math.Pow(upper,y), Math.Pow(lower,y))
+                                             | Flt y, Rat (upper, lower) ->
+                                                   Flt (Math.Pow(squareRoot(y, lower), upper))     
+                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                                   Rat ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))  
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
+                                    | Rat (upper, lower) -> Rat (-upper, lower)
                                     | Flt n -> Flt -n
     static member (~+) (n:number) = match n with
                                     | Int n -> Int +n
+                                    | Rat (upper, lower) -> Rat (+upper, lower)
                                     | Flt n -> Flt +n
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
+                                     | Rat (upper, lower) -> Flt (Math.Floor(upper/lower))
                                      | _ -> n
 
 and trig =
@@ -65,7 +134,7 @@ let isdigit c = System.Char.IsDigit c
 let isletter c = System.Char.IsLetter c
 let isletterordigit c = System.Char.IsLetterOrDigit c
 let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
-
+  
 
 let lexError = System.Exception("invalid symbol in expression")
 let varError = System.Exception("incorrect var assignment")
@@ -88,16 +157,32 @@ let checkLogEdgeCase (newBase:float) =
 let checkBetweenAtanValues(x:float) =
     let out = fun input -> (input >= -(Math.PI/2.0) && input <= (Math.PI/2.0))
     out x 
-let rec scInt(iStr, iVal) = 
+let rec scInt(iStr, iVal) =
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
     | _ -> (iStr, iVal)
-
 and scFloat(iStr, iVal, weight) =
     match iStr with
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
-    | _ -> (iStr, iVal)
+    | _ -> (iStr, iVal)    
+and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
+    let upper = match iValString with
+                c :: tail when isdigit c ->
+                  scFloat(iValString.Tail, iVal + weight * floatVal c, weight / 10.0)
+                | _ -> (iValString, iVal)            
+    let lowerPre = match iVal1String with
+                   c :: tail when isdigit c -> scInt(tail, 10*iVal1+(intVal c))
+                   | _ -> (iVal1String, iVal1)
+    let lower = match iVal2String with
+                   c :: tail when isdigit c ->
+                   scFloat(iVal2String.Tail, (float) (snd lowerPre) + weight * floatVal c, weight / 10.0)
+                   | _ -> (iVal2String, iVal1)
+    let rec burnIStr inCharList =
+        match inCharList with
+        | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
+        | _ -> (inCharList)    
+    (upper, lower, (burnIStr iStr))               
 let isMathFunc(inString) =
     match inString with
     | "ln"  -> Log LogN
@@ -117,8 +202,10 @@ let rec scName(remain : list<char>, word : string) =
     | _ -> (remain, word)
 let getFloatRadian value =
      number.fltVal(value) * (Math.PI / 180.0)
-     
-
+let getFloatDegrees value =
+    (value) * (180.0/Math.PI)     
+let getListPart(valueEnd, listIn) =     
+    listIn |> List.take (listIn |> List.tryFindIndex (fun elem -> elem = valueEnd)).Value 
 let lexer input = 
     let rec scan input =
         match input with
@@ -134,11 +221,16 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
+        | ':'::tail -> scan tail
+        | '.'::tail -> scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
+                                      | '.' :: c :: ':' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(iVal, (getListPart(':',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
+                                                                                                                Num (Rat (snd iVal,snd iVal2)) :: scan iStr 
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
+                                      
                                       | _ -> Num (Int iVal) :: scan iStr
                                       // Num iVal :: scan iStr
         | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
@@ -248,6 +340,7 @@ let parseNeval tList =
                                (tList, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
+        | Num (Rat (upper, lower)) :: tail -> (tail, Flt (number.fltVal (Rat (upper, lower))))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
                               if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
                               else raise logInputError                  
@@ -262,32 +355,32 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(Math.Sin(getFloatRadian tval), 10) = 0.0 then
+                              if Math.Round(getFloatDegrees(Math.Sin(getFloatRadian tval)), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Sin(getFloatRadian tval)))
+                              else (tLst, Flt (getFloatDegrees(Math.Sin(getFloatRadian tval))))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(Math.Cos(getFloatRadian tval), 10) = 0.0 then
+                              if Math.Round(getFloatDegrees(Math.Cos(getFloatRadian tval)), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Cos(getFloatRadian tval)))                                
+                              else (tLst, Flt (getFloatDegrees(Math.Cos(getFloatRadian tval))))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
-                                if Math.Round((Math.Tan(getFloatRadian tval)), 10) = 0.0 then
+                                if Math.Round((getFloatDegrees(Math.Tan(getFloatRadian tval))), 10) = 0.0 then
                                   (tLst, Flt 0.0) 
-                                else (tLst, Flt (Math.Tan(getFloatRadian tval)))
+                                else (tLst, Flt (getFloatDegrees(Math.Tan(getFloatRadian tval))))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round ((Math.Asin(getFloatRadian tval)), 10) = 0.0 then
+                               if Math.Round ((getFloatDegrees(Math.Asin(getFloatRadian tval))), 10) = 0.0 then
                                  (tLst, Flt 0.0)
-                               else (tLst, Flt (Math.Asin(getFloatRadian tval)))
+                               else (tLst, Flt (getFloatDegrees(Math.Asin(getFloatRadian tval))))
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round((Math.Acos(getFloatRadian tval)), 10) = 0.0 then
+                               if Math.Round(getFloatDegrees((Math.Acos(getFloatRadian tval))), 10) = 0.0 then
                                  (tLst, Flt 0.0)  
-                               else (tLst, Flt (Math.Acos(getFloatRadian tval)))
+                               else (tLst, Flt (getFloatDegrees(Math.Acos(getFloatRadian tval))))
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenAtanValues (number.fltVal(tval)) then
-                                   if Math.Round((Math.Atan(getFloatRadian tval)),10) = 0.0 then 
+                                   if Math.Round(getFloatDegrees(Math.Atan(getFloatRadian tval)),10) = 0.0 then 
                                      (tLst, Flt 0.0)  
-                                   else (tLst, Flt (Math.Atan(getFloatRadian tval)))
+                                   else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
                                else raise tanUndefinedError
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
                                                                          variables <- variables.Remove(name)
@@ -382,3 +475,5 @@ let rec main' argv  =
            0
 
     
+    
+    // 
