@@ -28,115 +28,115 @@ type terminal =
     | Abs
     | Typ of typ
 and number =
-    Int of int | Flt of float | Rat of float * float
+    Int of int | Flt of float | Frac of float * float
     override this.ToString() =
         match this with
         | Int i -> i.ToString()
         | Flt f -> f.ToString()
-        | Rat (num,denom) -> num.ToString() + "/" + denom.ToString()
+        | Frac (num,denom) -> num.ToString() + "/" + denom.ToString()
     member this.TypeToString() =
         match this with
         | Int _ -> "int"
         | Flt _ -> "float"
-        | Rat _ -> "rat"
+        | Frac _ -> "frac"
     static member fltVal n = match n with
                              | Flt f -> f
                              | Int i -> float i
-                             | Rat (upper,lower) -> upper/lower 
+                             | Frac (upper,lower) -> upper/lower 
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
-                                               | Rat (upper, lower), Int y ->
-                                                   Rat (upper + lower * float y, lower)
-                                               | Int y, Rat (upper, lower) ->
-                                                   Rat (upper + lower * float y, lower)    
-                                               | Rat (upper, lower), Flt y ->
-                                                   Rat (upper + lower * y, lower)
-                                               | Flt y, Rat (upper, lower) ->
-                                                   Rat (upper + lower * y, lower)    
-                                               | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
-                                                   Rat (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
+                                               | Frac (upper, lower), Int y ->
+                                                   Frac (upper + lower * float y, lower)
+                                               | Int y, Frac (upper, lower) ->
+                                                   Frac (upper + lower * float y, lower)    
+                                               | Frac (upper, lower), Flt y ->
+                                                   Frac (upper + lower * y, lower)
+                                               | Flt y, Frac (upper, lower) ->
+                                                   Frac (upper + lower * y, lower)    
+                                               | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                                   Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
-                                             | Rat (upper, lower), Int y ->
-                                                   Rat (upper - lower * float y, lower)
-                                             | Int y, Rat (upper, lower) ->
-                                                   Rat (upper - lower * float y, lower)      
-                                             | Rat (upper, lower), Flt y ->
-                                                   Rat (upper - lower * y, lower)
-                                             | Flt y, Rat (upper, lower) ->
-                                                   Rat (upper - lower * y, lower)    
-                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
-                                                   Rat (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
+                                             | Frac (upper, lower), Int y ->
+                                                   Frac (upper - lower * float y, lower)
+                                             | Int y, Frac (upper, lower) ->
+                                                   Frac (upper - lower * float y, lower)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Frac (upper - lower * y, lower)
+                                             | Flt y, Frac (upper, lower) ->
+                                                   Frac (upper - lower * y, lower)    
+                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                                   Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
-                                             | Rat (upper, lower), Int y ->
-                                                   Rat (upper * float y, lower)
-                                             | Int y, Rat (upper, lower) ->
-                                                   Rat (upper * float y, lower)      
-                                             | Rat (upper, lower), Flt y ->
-                                                   Rat (upper * y, lower)
-                                             | Flt y, Rat (upper, lower) ->
-                                                   Rat (upper * y, lower)      
-                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
-                                                   Rat (upper * upperTwo, lower*lowerTwo) 
+                                             | Frac (upper, lower), Int y ->
+                                                   Frac (upper * float y, lower)
+                                             | Int y, Frac (upper, lower) ->
+                                                   Frac (upper * float y, lower)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Frac (upper * y, lower)
+                                             | Flt y, Frac (upper, lower) ->
+                                                   Frac (upper * y, lower)      
+                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                                   Frac (upper * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
-                                             | Rat (upper, lower), Int y ->
-                                                   Rat (upper, lower * float y)
-                                             | Int y, Rat (upper, lower) ->
-                                                   Rat (lower *  float y, upper)      
-                                             | Rat (upper, lower), Flt y ->
-                                                   Rat (upper, lower * y)
-                                             | Flt y, Rat (upper, lower) ->
-                                                   Rat (lower * y, upper)      
-                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
-                                                   Rat (upper * lowerTwo, lower*upperTwo) 
+                                             | Frac (upper, lower), Int y ->
+                                                   Frac (upper, lower * float y)
+                                             | Int y, Frac (upper, lower) ->
+                                                   Frac (lower *  float y, upper)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Frac (upper, lower * y)
+                                             | Flt y, Frac (upper, lower) ->
+                                                   Frac (lower * y, upper)      
+                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                                   Frac (upper * lowerTwo, lower*upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
-                                             | Rat (upper, lower), Int y ->
+                                             | Frac (upper, lower), Int y ->
                                                    Flt ((upper/ lower) % float y)
-                                             | Int y, Rat (upper, lower) ->
+                                             | Int y, Frac (upper, lower) ->
                                                    Flt ((lower * float y) % upper)
-                                             | Rat (upper, lower), Flt y ->
+                                             | Frac (upper, lower), Flt y ->
                                                    Flt ((upper/ lower) % y)
-                                             | Flt y, Rat (upper, lower) ->
+                                             | Flt y, Frac (upper, lower) ->
                                                    Flt ((lower * y) % upper)      
-                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
+                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Flt ((upper * lowerTwo / lower) % upperTwo)       
                                              | _ -> Flt (number.fltVal x % number.fltVal y)
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
-                                             | Rat (upper, lower), Int y ->
-                                                   Rat (Math.Pow(upper, float y), Math.Pow(lower, float y))
-                                             | Int y, Rat (upper, lower) ->
+                                             | Frac (upper, lower), Int y ->
+                                                   Frac (Math.Pow(upper, float y), Math.Pow(lower, float y))
+                                             | Int y, Frac (upper, lower) ->
                                                    Int (pown ((int)(squareRoot(float y, lower))) ((int)upper))
-                                             | Rat (upper, lower), Flt y ->
-                                                   Rat (Math.Pow(upper,y), Math.Pow(lower,y))
-                                             | Flt y, Rat (upper, lower) ->
+                                             | Frac (upper, lower), Flt y ->
+                                                   Frac (Math.Pow(upper,y), Math.Pow(lower,y))
+                                             | Flt y, Frac (upper, lower) ->
                                                    Flt (Math.Pow(squareRoot(y, lower), upper))     
-                                             | Rat (upper, lower), Rat (upperTwo, lowerTwo) ->
-                                                   Rat ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))  
+                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                                   Frac ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))  
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
-                                    | Rat (upper, lower) -> Rat (-upper, lower)
+                                    | Frac (upper, lower) -> Frac (-upper, lower)
                                     | Flt n -> Flt -n
     static member (~+) (n:number) = match n with
                                     | Int n -> Int +n
-                                    | Rat (upper, lower) -> Rat (+upper, lower)
+                                    | Frac (upper, lower) -> Frac (+upper, lower)
                                     | Flt n -> Flt +n
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
-                                     | Rat (upper, lower) -> Flt (Math.Floor(upper/lower))
+                                     | Frac (upper, lower) -> Flt (Math.Floor(upper/lower))
                                      | _ -> n
     static member Abs (n:number) = match n with
                                    | Int n -> Int (Math.Abs(n))
                                    | Flt n -> Flt (Math.Abs(n))
-                                   | Rat (upper, lower) -> Flt (Math.Abs(upper/lower))
+                                   | Frac (upper, lower) -> Flt (Math.Abs(upper/lower))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
@@ -144,30 +144,30 @@ and arith =
 and log =
     LogN | LogOther
 and typ =
-    Integer | Float | Rational | Auto
+    Integer | Float | Fraction | Auto
 
 let str2lst s = [for c in s -> c]
-let isblank c = System.Char.IsWhiteSpace c
-let isdigit c = System.Char.IsDigit c
-let isletter c = System.Char.IsLetter c
-let isletterordigit c = System.Char.IsLetterOrDigit c
+let isblank c = Char.IsWhiteSpace c
+let isdigit c = Char.IsDigit c
+let isletter c = Char.IsLetter c
+let isletterordigit c = Char.IsLetterOrDigit c
 let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
   
 
-let lexError = System.Exception("invalid symbol in expression")
-let varError = System.Exception("incorrect var assignment")
+let lexError = Exception("invalid symbol in expression")
+let varError = Exception("incorrect var assignment")
 let intVal (c:char) = (int)((int)c - (int)'0')
 let floatVal (c:char) = (float)((int)c - (int)'0')
 let strVal (c:char) = (string)c
-let parseError = System.Exception("Parser error")
-let divisionByZeroError = System.Exception("Division by zero is undefined")
-let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
-let sinUndefinedError = System.Exception("Sin call will result in undefined behavior.")
-let cosUndefinedError = System.Exception("Cos call will result in undefined behavior.")
-let logInputError = System.Exception("Input Error By User for function Log and Ln")
-let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
-let undefinedVarError = System.Exception("Syntax error Variable is not defined")
-let typeError = System.Exception("Type mismatch")
+let parseError = Exception("Parser error")
+let divisionByZeroError = Exception("Division by zero is undefined")
+let tanUndefinedError = Exception("Tan call will result in undefined behavior.")
+let sinUndefinedError = Exception("Sin call will result in undefined behavior.")
+let cosUndefinedError = Exception("Cos call will result in undefined behavior.")
+let logInputError = Exception("Input Error By User for function Log and Ln")
+let unclosedBracketsError = Exception("Syntax error Brackets must be closed")
+let undefinedVarError = Exception("Syntax error Variable is not defined")
+let typeError = Exception("Type mismatch")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -187,23 +187,23 @@ and scFloat(iStr, iVal, weight) =
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)    
-and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
-    let upper = match iValString with
-                c :: tail when isdigit c ->
-                  scFloat(iValString.Tail, iVal + weight * floatVal c, weight / 10.0)
-                | _ -> (iValString, iVal)            
-    let lowerPre = match iVal1String with
-                   c :: tail when isdigit c -> scInt(tail, 10*iVal1+(intVal c))
-                   | _ -> (iVal1String, iVal1)
-    let lower = match iVal2String with
-                   c :: tail when isdigit c ->
-                   scFloat(iVal2String.Tail, (float) (snd lowerPre) + weight * floatVal c, weight / 10.0)
-                   | _ -> (iVal2String, float iVal1)
-    let rec burnIStr inCharList =
-        match inCharList with
-        | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
-        | _ -> (inCharList)
-    (upper, lower, (burnIStr iStr))               
+// and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
+//     let upper = match iValString with
+//                 c :: tail when isdigit c ->
+//                   scFloat(iValString.Tail, iVal + weight * floatVal c, weight / 10.0)
+//                 | _ -> (iValString, iVal)            
+//     let lowerPre = match iVal1String with
+//                    c :: tail when isdigit c -> scInt(tail, 10*iVal1+(intVal c))
+//                    | _ -> (iVal1String, iVal1)
+//     let lower = match iVal2String with
+//                    c :: tail when isdigit c ->
+//                    scFloat(iVal2String.Tail, (float) (snd lowerPre) + weight * floatVal c, weight / 10.0)
+//                    | _ -> (iVal2String, float iVal1)
+//     let rec burnIStr inCharList =
+//         match inCharList with
+//         | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
+//         | _ -> (inCharList)
+//     (upper, lower, (burnIStr iStr))               
 
 let isReservedWord(inString) =
     match inString with
@@ -219,7 +219,7 @@ let isReservedWord(inString) =
     | "abs" -> Abs
     | "int" -> Typ Integer
     | "float" -> Typ Float
-    | "rat" -> Typ Rational
+    | "frac" -> Typ Fraction
     | "var" -> Typ Auto
     | _ -> Null
 
@@ -252,8 +252,8 @@ let lexer input =
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
-                                      | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(float iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
-                                                                                                                Num (Rat (snd iVal,snd iVal2)) :: scan iStr 
+                                      // | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(float iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
+                                      //                                                                           Num (Frac (snd iVal,snd iVal2)) :: scan iStr 
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
                                       
@@ -314,6 +314,7 @@ let parser tList =
         | Arith Sub :: tail -> tail
         | Num (Int value) :: tail -> tail
         | Num (Flt value) :: tail -> tail
+        | Num (Frac (num,denom)) :: tail -> tail
         | Exp :: tail -> (NR >> Fopt) tail
         | Log LogN :: tail -> (NR >> Fopt) tail
         | Log LogOther :: tail -> (NR >> Fopt) tail
@@ -366,8 +367,9 @@ let parseNeval tList =
                                (tList, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
-        // | Num (Rat (upper, lower)) :: tail -> (tail, Flt (number.fltVal (Rat (upper, lower))))
-        | Num (Rat (upper, lower)) :: tail -> (tail, Rat (upper, lower))
+        | Typ Fraction :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: tail -> (tail, Frac (num, denom))
+        | Typ Fraction :: Lpar :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        | Lpar :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
@@ -377,10 +379,6 @@ let parseNeval tList =
                                   if checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))
                                   then (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
                                   else raise logInputError
-        | Lpar :: tail -> let (tList, tval) = E tail
-                          match tList with 
-                          | Rpar :: tail -> (tail, tval)
-                          | _ -> raise unclosedBracketsError
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
@@ -424,7 +422,6 @@ let parseNeval tList =
         //                                 variables <- variables.Add(name, tVal)
         //                                 (tail, tVal)
         | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                                    Console.WriteLine(tVal.GetType())
                                                     variables <- variables.Add(name, tVal)
                                                     (tail, tVal)
         | Typ Integer :: Var name :: Assign :: tail -> let tVal = snd (E tail)
@@ -441,17 +438,21 @@ let parseNeval tList =
                                                      else
                                                          Console.WriteLine("Value " + tVal.ToString() + " not a float")
                                                          raise typeError
-        | Typ Rational :: Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                                        if tVal.GetType() = (Rat (0.0,1.0)).GetType() then
+        | Typ Fraction :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                                        if tVal.GetType() = (Frac (0.0,1.0)).GetType() then
                                                           variables <- variables.Add(name, tVal)
                                                           (tail, tVal)
                                                         else
-                                                          Console.WriteLine("Value " + tVal.ToString() + " not an rational number")
-                                                          raise typeError                                                        
+                                                          Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
+                                                          raise typeError                                               
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
         | Pi :: tail -> (tail, Flt Math.PI)
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
                                                                      raise undefinedVarError
+        | Lpar :: tail -> let (tList, tval) = E tail
+                          match tList with 
+                          | Rpar :: tail -> (tail, tval)
+                          | _ -> raise unclosedBracketsError                                                             
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
@@ -528,7 +529,7 @@ let rec main' argv  =
            //testInputs
            Console.WriteLine("Symbol table:")
            for entry in variables do
-               Console.Write(entry.Value.TypeToString() + " " + entry.Key + " = " + entry.Value.ToString() + " ")
+               Console.Write("{0} {1} = {2} ", entry.Value.TypeToString(), entry.Key, entry.Value.ToString())
            // Console.WriteLine(variables)
            Console.WriteLine();
            main' argv
