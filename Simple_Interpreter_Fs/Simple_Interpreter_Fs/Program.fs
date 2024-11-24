@@ -98,15 +98,15 @@ and number =
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
                                              // | Frac (upper, lower), Int y ->
-                                             //       Flt ((upper / lower) % float y)
+                                             //       Flt ((upper / lower) % y)
                                              // | Int y, Frac (upper, lower) ->
                                              //       Flt ((lower * y) % upper)
                                              // | Frac (upper, lower), Flt y ->
                                              //       Flt ((float upper / float lower) % y)
                                              // | Flt y, Frac (upper, lower) ->
-                                             //       Flt ((float upper / float lower) % y)      
+                                             //       Flt ((y * float lower) % float upper)      
                                              // | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                             //       Flt ((upper * lowerTwo / lower) % upperTwo)       
+                                             //       Flt (((upper * lowerTwo) / lower) % upperTwo)       
                                              | _ -> Flt (number.fltVal x % number.fltVal y)
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
@@ -520,9 +520,9 @@ let rec main' argv  =
     let input:string = getInputString()
     match str2lst input with
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
-    | '\\' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> variables <- Map.empty
-                                                         Console.WriteLine("Cleared symbol table")
-                                                         main' argv
+    | '/' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> variables <- Map.empty
+                                                        Console.WriteLine("Cleared symbol table")
+                                                        main' argv
     | _ -> let oList = lexer input
            let sList = printTList oList;
 
