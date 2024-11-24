@@ -28,7 +28,7 @@ type terminal =
     | Abs
     | Typ of typ
 and number =
-    Int of int | Flt of float | Frac of float * float
+    Int of int | Flt of float | Frac of int * int
     override this.ToString() =
         match this with
         | Int i -> i.ToString()
@@ -42,84 +42,85 @@ and number =
     static member fltVal n = match n with
                              | Flt f -> f
                              | Int i -> float i
-                             | Frac (upper,lower) -> upper/lower 
+                             | Frac (upper,lower) -> float upper / float lower 
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
-                                                   Frac (upper + lower * float y, lower)
-                                               | Int y, Frac (upper, lower) ->
-                                                   Frac (upper + lower * float y, lower)    
-                                               | Frac (upper, lower), Flt y ->
                                                    Frac (upper + lower * y, lower)
-                                               | Flt y, Frac (upper, lower) ->
+                                               | Int y, Frac (upper, lower) ->
                                                    Frac (upper + lower * y, lower)    
+                                               | Frac (upper, lower), Flt y ->
+                                                   Flt ((float upper / float lower) + y)
+                                               | Flt y, Frac (upper, lower) ->
+                                                   Flt ((float upper / float lower) + y)    
                                                | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper - lower * float y, lower)
-                                             | Int y, Frac (upper, lower) ->
-                                                   Frac (upper - lower * float y, lower)      
-                                             | Frac (upper, lower), Flt y ->
                                                    Frac (upper - lower * y, lower)
+                                             | Int y, Frac (upper, lower) ->
+                                                   Frac (upper - lower * y, lower)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Flt ((float upper / float lower) - y)
                                              | Flt y, Frac (upper, lower) ->
-                                                   Frac (upper - lower * y, lower)    
+                                                   Flt ((float upper / float lower) - y)
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper * float y, lower)
-                                             | Int y, Frac (upper, lower) ->
-                                                   Frac (upper * float y, lower)      
-                                             | Frac (upper, lower), Flt y ->
                                                    Frac (upper * y, lower)
-                                             | Flt y, Frac (upper, lower) ->
+                                             | Int y, Frac (upper, lower) ->
                                                    Frac (upper * y, lower)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Flt ((float upper / float lower) * y)
+                                             | Flt y, Frac (upper, lower) ->
+                                                   Flt ((float upper / float lower) * y)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower * float y)
-                                             | Int y, Frac (upper, lower) ->
-                                                   Frac (lower *  float y, upper)      
-                                             | Frac (upper, lower), Flt y ->
                                                    Frac (upper, lower * y)
+                                             | Int y, Frac (upper, lower) ->
+                                                   Frac (lower *  y, upper)      
+                                             | Frac (upper, lower), Flt y ->
+                                                   Flt ((float upper / float lower) / y)
                                              | Flt y, Frac (upper, lower) ->
-                                                   Frac (lower * y, upper)      
+                                                   Flt ((float upper / float lower) / y)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * lowerTwo, lower*upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
-                                             | Frac (upper, lower), Int y ->
-                                                   Flt ((upper/ lower) % float y)
-                                             | Int y, Frac (upper, lower) ->
-                                                   Flt ((lower * float y) % upper)
-                                             | Frac (upper, lower), Flt y ->
-                                                   Flt ((upper/ lower) % y)
-                                             | Flt y, Frac (upper, lower) ->
-                                                   Flt ((lower * y) % upper)      
-                                             | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Flt ((upper * lowerTwo / lower) % upperTwo)       
+                                             // | Frac (upper, lower), Int y ->
+                                             //       Flt ((upper / lower) % float y)
+                                             // | Int y, Frac (upper, lower) ->
+                                             //       Flt ((lower * y) % upper)
+                                             // | Frac (upper, lower), Flt y ->
+                                             //       Flt ((float upper / float lower) % y)
+                                             // | Flt y, Frac (upper, lower) ->
+                                             //       Flt ((float upper / float lower) % y)      
+                                             // | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                             //       Flt ((upper * lowerTwo / lower) % upperTwo)       
                                              | _ -> Flt (number.fltVal x % number.fltVal y)
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (Math.Pow(upper, float y), Math.Pow(lower, float y))
+                                                   Frac (pown upper y, pown lower y)
                                              | Int y, Frac (upper, lower) ->
-                                                   Int (pown ((int)(squareRoot(float y, lower))) ((int)upper))
+                                                   Int (pown ((int)(squareRoot(float y, float lower))) ((int)upper))
                                              | Frac (upper, lower), Flt y ->
-                                                   Frac (Math.Pow(upper,y), Math.Pow(lower,y))
+                                                   Flt (Math.Pow((float upper/float lower), y))
                                              | Flt y, Frac (upper, lower) ->
-                                                   Flt (Math.Pow(squareRoot(y, lower), upper))     
+                                                   Flt (Math.Pow(squareRoot(y, float lower), float upper))     
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))  
+                                                   // Frac ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))
+                                                    Flt (Math.Pow((float upper / float lower), (float upperTwo / float lowerTwo)))  
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
@@ -131,12 +132,12 @@ and number =
                                     | Flt n -> Flt +n
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
-                                     | Frac (upper, lower) -> Flt (Math.Floor(upper/lower))
+                                     | Frac (upper, lower) -> Flt (Math.Floor(float upper/ float lower))
                                      | _ -> n
     static member Abs (n:number) = match n with
                                    | Int n -> Int (Math.Abs(n))
                                    | Flt n -> Flt (Math.Abs(n))
-                                   | Frac (upper, lower) -> Flt (Math.Abs(upper/lower))
+                                   | Frac (upper, lower) -> Flt (float (Math.Abs(upper/lower)))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
@@ -367,9 +368,9 @@ let parseNeval tList =
                                (tList, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
-        | Typ Fraction :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: tail -> (tail, Frac (num, denom))
-        | Typ Fraction :: Lpar :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: Rpar :: tail -> (tail, Frac (num, denom))
-        | Lpar :: Num (Flt num) :: Arith Div :: Num (Flt denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail -> (tail, Frac (num, denom))
+        | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
@@ -439,7 +440,7 @@ let parseNeval tList =
                                                          Console.WriteLine("Value " + tVal.ToString() + " not a float")
                                                          raise typeError
         | Typ Fraction :: Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                                        if tVal.GetType() = (Frac (0.0,1.0)).GetType() then
+                                                        if tVal.GetType() = (Frac (0,1)).GetType() then
                                                           variables <- variables.Add(name, tVal)
                                                           (tail, tVal)
                                                         else
