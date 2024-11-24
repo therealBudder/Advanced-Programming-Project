@@ -419,9 +419,9 @@ let parseNeval tList =
                                                                             (tail, tVal)
                                                                          else
                                                                              raise typeError
-        // | Var name :: Assign :: tail -> let tVal = snd (E tail)
-        //                                 variables <- variables.Add(name, tVal)
-        //                                 (tail, tVal)
+        | Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                        variables <- variables.Add(name, tVal)
+                                        (tail, tVal)
         | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
                                                     variables <- variables.Add(name, tVal)
                                                     (tail, tVal)
