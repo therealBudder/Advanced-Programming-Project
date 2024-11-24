@@ -7,7 +7,7 @@ open System
 
 let rec squareRoot ((inputValue:float), (power:float)) =
    match power with
-   power when power > 1 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
+   power when power > 1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
    | _ -> inputValue  
 
 type terminal = 
@@ -100,9 +100,9 @@ and number =
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
                                              | Rat (upper, lower), Int y ->
-                                                   Rat (Math.Pow(upper, y), Math.Pow(lower, y))
+                                                   Rat (Math.Pow(upper, float y), Math.Pow(lower, float y))
                                              | Int y, Rat (upper, lower) ->
-                                                   Int (pown ((int)(squareRoot(y, lower))) ((int)upper))
+                                                   Int (pown ((int)(squareRoot(float y, lower))) ((int)upper))
                                              | Rat (upper, lower), Flt y ->
                                                    Rat (Math.Pow(upper,y), Math.Pow(lower,y))
                                              | Flt y, Rat (upper, lower) ->
@@ -184,7 +184,7 @@ and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
     let lower = match iVal2String with
                    c :: tail when isdigit c ->
                    scFloat(iVal2String.Tail, (float) (snd lowerPre) + weight * floatVal c, weight / 10.0)
-                   | _ -> (iVal2String, iVal1)
+                   | _ -> (iVal2String, float iVal1)
     let rec burnIStr inCharList =
         match inCharList with
         | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
@@ -234,7 +234,7 @@ let lexer input =
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
-                                      | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
+                                      | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(float iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
                                                                                                                 Num (Rat (snd iVal,snd iVal2)) :: scan iStr 
                                       | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
