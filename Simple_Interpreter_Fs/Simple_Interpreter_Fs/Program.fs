@@ -520,6 +520,9 @@ let rec main' argv  =
     let input:string = getInputString()
     match str2lst input with
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
+    | '\\' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> variables <- Map.empty
+                                                         Console.WriteLine("Cleared symbol table")
+                                                         main' argv
     | _ -> let oList = lexer input
            let sList = printTList oList;
 
