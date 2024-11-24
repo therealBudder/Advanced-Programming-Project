@@ -418,6 +418,7 @@ let parseNeval tList =
                                                                             variables <- variables.Add(name, tVal)
                                                                             (tail, tVal)
                                                                          else
+                                                                             Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tVal.TypeToString())
                                                                              raise typeError
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
