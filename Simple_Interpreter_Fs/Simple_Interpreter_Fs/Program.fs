@@ -26,8 +26,19 @@ type terminal =
     | Null
     | Pi
     | Abs
+    | Typ of typ
 and number =
     Int of int | Flt of float | Rat of float * float
+    override this.ToString() =
+        match this with
+        | Int i -> i.ToString()
+        | Flt f -> f.ToString()
+        | Rat (num,denom) -> num.ToString() + "/" + denom.ToString()
+    member this.TypeToString() =
+        match this with
+        | Int _ -> "int"
+        | Flt _ -> "float"
+        | Rat _ -> "rat"
     static member fltVal n = match n with
                              | Flt f -> f
                              | Int i -> float i
@@ -132,6 +143,8 @@ and arith =
     Add | Sub | Mul | Div | FlrDiv
 and log =
     LogN | LogOther
+and typ =
+    Integer | Float | Rational | Auto
 
 let str2lst s = [for c in s -> c]
 let isblank c = System.Char.IsWhiteSpace c
@@ -154,6 +167,7 @@ let cosUndefinedError = System.Exception("Cos call will result in undefined beha
 let logInputError = System.Exception("Input Error By User for function Log and Ln")
 let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
 let undefinedVarError = System.Exception("Syntax error Variable is not defined")
+let typeError = System.Exception("Type mismatch")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -203,6 +217,10 @@ let isReservedWord(inString) =
     | "tan" -> Trig Tan
     | "pi" -> Pi
     | "abs" -> Abs
+    | "int" -> Typ Integer
+    | "float" -> Typ Float
+    | "rat" -> Typ Rational
+    | "var" -> Typ Auto
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -348,7 +366,8 @@ let parseNeval tList =
                                (tList, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
-        | Num (Rat (upper, lower)) :: tail -> (tail, Flt (number.fltVal (Rat (upper, lower))))
+        // | Num (Rat (upper, lower)) :: tail -> (tail, Flt (number.fltVal (Rat (upper, lower))))
+        | Num (Rat (upper, lower)) :: tail -> (tail, Rat (upper, lower))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
@@ -395,12 +414,40 @@ let parseNeval tList =
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
-                                                                         variables <- variables.Remove(name)
-                                                                         variables <- variables.Add(name, tVal)
-                                                                         (tail, tVal)
-        | Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                        variables <- variables.Add(name, tVal)
-                                        (tail, tVal)
+                                                                         if variables.[name].GetType() = tVal.GetType() then
+                                                                            variables <- variables.Remove(name)
+                                                                            variables <- variables.Add(name, tVal)
+                                                                            (tail, tVal)
+                                                                         else
+                                                                             raise typeError
+        // | Var name :: Assign :: tail -> let tVal = snd (E tail)
+        //                                 variables <- variables.Add(name, tVal)
+        //                                 (tail, tVal)
+        | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                                    Console.WriteLine(tVal.GetType())
+                                                    variables <- variables.Add(name, tVal)
+                                                    (tail, tVal)
+        | Typ Integer :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                                       if tVal.GetType() = (Int 0).GetType() then
+                                                           variables <- variables.Add(name, tVal)
+                                                           (tail, tVal)
+                                                       else
+                                                           Console.WriteLine("Value "+ tVal.ToString() + " not an integer")
+                                                           raise typeError
+        | Typ Float :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                                     if tVal.GetType() = (Flt 0.0).GetType() then
+                                                          variables <- variables.Add(name, tVal)
+                                                          (tail, tVal)
+                                                     else
+                                                         Console.WriteLine("Value " + tVal.ToString() + " not a float")
+                                                         raise typeError
+        | Typ Rational :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                                        if tVal.GetType() = (Rat (0.0,1.0)).GetType() then
+                                                          variables <- variables.Add(name, tVal)
+                                                          (tail, tVal)
+                                                        else
+                                                          Console.WriteLine("Value " + tVal.ToString() + " not an rational number")
+                                                          raise typeError                                                        
         | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
         | Pi :: tail -> (tail, Flt Math.PI)
         | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
@@ -481,7 +528,7 @@ let rec main' argv  =
            //testInputs
            Console.WriteLine("Symbol table:")
            for entry in variables do
-               Console.Write("var " + entry.Key + " = " + entry.Value.ToString() + " ")
+               Console.Write(entry.Value.TypeToString() + " " + entry.Key + " = " + entry.Value.ToString() + " ")
            // Console.WriteLine(variables)
            Console.WriteLine();
            main' argv
