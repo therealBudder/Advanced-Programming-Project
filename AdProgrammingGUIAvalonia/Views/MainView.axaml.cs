@@ -144,20 +144,21 @@ public partial class MainView : UserControl
         if (plot != null)
         {
             //mvm.Points.Add(new DataPoint(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput)));
-            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToDouble(pointCountInput));
+            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToInt32(pointCountInput));
             plot.Series[0].ItemsSource = mvm.Points;
             plot.InvalidatePlot(true);
         }
     }
 
-    private void CalculateY(double xMin, double xMax, string yExpr, double points)
+    private void CalculateY(double xMin, double xMax, string yExpr, int points)
     {
         //double step = (xMax - xMin) / (points - 1);
         double step;
-        step = Program.number.fltVal(Program.guiIntegration(((xMax - xMin) / (points - 1)).ToString()));
+        step = (xMax - xMin) / (points - 1);
+        //step = Program.number.fltVal(Program.guiIntegration(((xMax - xMin) / (points - 1)).ToString()));
         Program.number y;
         double currentX = xMin;
-        for (double point = 0; point < points; point++)
+        for (int point = 0; point < points; point++)
         {
             currentX = xMin + point * step;
             Program.guiIntegration("x=" + currentX.ToString());
@@ -172,7 +173,7 @@ public partial class MainView : UserControl
         var plot = this.Find<Plot>("oPlot") as Plot;
         if (plot != null)
         {
-            mvm.Points.Clear();
+            mvm.ResetPoints();
             plot.Series[0].ItemsSource = mvm.Points;
             plot.InvalidatePlot(true);
         }

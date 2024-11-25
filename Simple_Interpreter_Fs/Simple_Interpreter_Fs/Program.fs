@@ -383,13 +383,13 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(getFloatDegrees(Math.Sin(getFloatRadian tval)), 10) = 0.0 then
+                              if Math.Round((Math.Sin(getFloatRadian tval)), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (getFloatDegrees(Math.Sin(getFloatRadian tval))))
+                              else (tLst, Flt ((Math.Sin(getFloatRadian tval))))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(getFloatDegrees(Math.Cos(getFloatRadian tval)), 10) = 0.0 then
+                              if Math.Round((Math.Cos(getFloatRadian tval)), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (getFloatDegrees(Math.Cos(getFloatRadian tval))))                                
+                              else (tLst, Flt ((Math.Cos(getFloatRadian tval))))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
                                 if Math.Round((getFloatDegrees(Math.Tan(getFloatRadian tval))), 10) = 0.0 then

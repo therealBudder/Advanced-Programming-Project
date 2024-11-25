@@ -22,6 +22,11 @@ public class MainViewModel : ViewModelBase
         this.Points.Add(point);
     }
 
+    public void ResetPoints()
+    {
+        this.Points.Clear();
+    }
+
     public string Title { get; private set; }
 
     public List<DataPoint> Points { get; private set; }
