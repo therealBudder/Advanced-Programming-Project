@@ -423,9 +423,9 @@ let parseNeval tList =
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         variables <- variables.Add(name, tVal)
                                         (tail, tVal)
-        | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                                    variables <- variables.Add(name, tVal)
-                                                    (tail, tVal)
+        // | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+        //                                             variables <- variables.Add(name, tVal)
+        //                                             (tail, tVal)
         | Typ Integer :: Var name :: Assign :: tail -> let tVal = snd (E tail)
                                                        if tVal.GetType() = (Int 0).GetType() then
                                                            variables <- variables.Add(name, tVal)
