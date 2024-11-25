@@ -432,11 +432,11 @@ let parseNeval tList =
                                if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (Math.Atan(getFloatRadian tval)))
-        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = E tail
+        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail) 
                                                                          if variables.[name].GetType() = tVal.GetType() then
                                                                             variables <- variables.Remove(name)
                                                                             variables <- variables.Add(name, tVal)
-                                                                            (tLst, tVal)
+                                                                            (tList, tVal)
                                                                          else
                                                                              Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tVal.TypeToString())
                                                                              raise typeError
