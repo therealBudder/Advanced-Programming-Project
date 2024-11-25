@@ -83,6 +83,13 @@ let undefinedVarError = System.Exception("Syntax error Variable is not defined")
 let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
 let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
 
+let rec printTList (lst:list<terminal>) : list<string> = 
+    match lst with
+    head::tail -> Console.Write("{0} ",head.ToString())
+                  printTList tail
+                  
+    | [] -> Console.Write("EOL\n")
+            []
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -309,24 +316,24 @@ let parseNeval tList =
         //-----------------------------------------------------------------------------------------------------------------------
         //FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
         //-----------------------------------------------------------------------------------------------------------------------
-        | Func :: Var name :: tail when functions.ContainsKey(name) ->  let (paramList, tList) = P ([], tail)
-                                                                        functions <- functions.Remove(name)
-                                                                        functions<- functions.Add(name, (paramList, tList))
+        | Func :: Var name :: Lpar :: tail when functions.ContainsKey(name) ->  let (paramList, tList) = P ([], tail)
+                                                                                functions <- functions.Remove(name)
+                                                                                functions<- functions.Add(name, (paramList, tList))
 
-                                                                        symbolTable <- symbolTable.Remove(name)
-                                                                        symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
-                                                                        Console.WriteLine(symbolTable[name])   //test
+                                                                                symbolTable <- symbolTable.Remove(name)
+                                                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                                                                Console.WriteLine(symbolTable[name])   //test
                                                                         
-                                                                        (tList, (Int)0)
+                                                                                (tList, (Int)0)
 
-        | Func :: Var name :: tail -> let (paramList, tList) = P ([], tail)
-                                      functions <- functions.Add(name, (paramList, tList))
-                                      Console.WriteLine(functions[name])   //test
+        | Func :: Var name :: Lpar ::tail ->    let (paramList, tList) = P ([], tail)
+                                                functions <- functions.Add(name, (paramList, tList))
+                                                Console.WriteLine(functions[name])   //test
                                       
-                                      symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
-                                      Console.WriteLine(symbolTable[name])   //test
+                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                                Console.WriteLine(symbolTable[name])   //test8
 
-                                      (tList, (Int)0)
+                                                (tList, (Int)0)
         //-----------------------------------------------------------------------------------------------------------------------
         //CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING CALLING 
         //-----------------------------------------------------------------------------------------------------------------------
@@ -335,6 +342,16 @@ let parseNeval tList =
                                                                  | Variable -> match tList.Head with
                                                                                | Num value -> (tList, value)
                                                                                | _ -> raise NaNError
+                                                                 | Function -> match tail.Head with
+                                                                               | Lpar   ->  let (paramsToSub) = getP tail.Tail
+                                                                                            printTList paramsToSub
+                                                                                            Console.WriteLine("YAYYAYYAYAYAY")
+                                                                                            Console.ReadLine();
+                                                                                            raise parseError
+                                                                               
+                                                                               | _      ->  Console.WriteLine(tList.Head);
+                                                                                            Console.ReadLine();
+                                                                                            raise parseError
                                                                  | _ -> Console.WriteLine("Invalid BindingType in table")
                                                                         raise bindingTypeError
 
@@ -347,23 +364,28 @@ let parseNeval tList =
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
+        //-----------------------------------------------------------------------------------------------------------------------
+        //-----------------------------------------------------------------------------------------------------------------------
     and P (pList, tList) =
         match tList with
         | Var name :: tail -> P ((List.append pList [Var name]), tail)
-        | Assign :: tail -> (pList, tail)
+        | Rpar :: Assign :: tail -> (pList, tail)
         | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
+    
+    and getP (inTList) = 
+        let rec scan t =
+            match t with
+            | Var name :: tail ->           Var name :: scan tail
+            | Num (Int value) :: tail ->    Num (Int value) :: scan tail
+            | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
+            | Rpar :: tail ->               []
+            | _ ->  printTList t
+                    Console.ReadLine();
+                    raise parseError
+        scan inTList
     E tList
-
-
-let rec printTList (lst:list<terminal>) : list<string> = 
-    match lst with
-    head::tail -> Console.Write("{0} ",head.ToString())
-                  printTList tail
-                  
-    | [] -> Console.Write("EOL\n")
-            []
     
 let test (input:string, correctOut) =
     let oList = lexer input
@@ -420,7 +442,7 @@ let rec main' argv  =
     | _ -> let oList = lexer input
            let sList = printTList oList;           
 
-           //let pList = printTList (parser oList)
+           //let pList = printTList (parser oList)      KICK ROCKS
            let Out = parseNeval oList
     
            Console.WriteLine("Result = {0}", snd Out)
@@ -430,7 +452,8 @@ let rec main' argv  =
                Console.Write("var " + entry.Key + " = " + entry.Value.ToString() + " ")
            // Console.WriteLine(variables)
            Console.WriteLine();
-           main' argv
+           main' argv |> ignore
            0
 
-    
+    //test input: fn foo(bar) = bar+3
+    //test input: fn getPi
