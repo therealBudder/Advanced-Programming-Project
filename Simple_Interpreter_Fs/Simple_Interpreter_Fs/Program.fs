@@ -38,74 +38,94 @@ and number =
         match this with
         | Int _ -> "int"
         | Flt _ -> "float"
-        | Frac _ -> "frac"
+        | Frac _ -> "frac" 
     static member fltVal n = match n with
                              | Flt f -> f
                              | Int i -> float i
-                             | Frac (upper,lower) -> float upper / float lower 
+                             | Frac (upper,lower) -> float upper / float lower
+    static member intVal n = match n with
+                             | Flt f -> int f
+                             | Int i -> i
+                             | Frac (num,denom) -> int (float num / float denom)
+    member this.ToInt() =
+        match this with
+        | Int i -> Int i
+        | Flt f -> Int (int f)
+        | Frac (n,d) -> Int (int (number.fltVal(Frac(n,d))))
+    
+    static member toFraction inputIn =
+     let (num, denom) = number.toFractionHelp(inputIn, Int 1)
+     Frac (number.intVal(num),number.intVal(denom))    
+    static member toFractionHelp(num, denom) =
+        if num % Int 10 <> Flt 0 then
+            number.toFractionHelp(num*Flt 10, denom*Int 10)
+        else
+            let fracUpp = num/ Int 10
+            let fracDown = denom/ Int 10
+            (fracUpp, fracDown)
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
-                                                   Frac (upper + lower * y, lower)
+                                                   (number.toFraction(Int y)) + Frac (upper, lower)
                                                | Int y, Frac (upper, lower) ->
-                                                   Frac (upper + lower * y, lower)    
+                                                   (number.toFraction(Int y)) + Frac (upper, lower)   
                                                | Frac (upper, lower), Flt y ->
-                                                   Flt ((float upper / float lower) + y)
+                                                   (number.toFraction(Flt y)) + Frac (upper, lower)
                                                | Flt y, Frac (upper, lower) ->
-                                                   Flt ((float upper / float lower) + y)    
+                                                   (number.toFraction(Flt y)) + Frac (upper, lower)   
                                                | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper - lower * y, lower)
+                                                   Frac (upper, lower) - (number.toFraction(Int y)) 
                                              | Int y, Frac (upper, lower) ->
-                                                   Frac (upper - lower * y, lower)      
+                                                   (number.toFraction(Int y)) - Frac (upper, lower)      
                                              | Frac (upper, lower), Flt y ->
-                                                   Flt ((float upper / float lower) - y)
+                                                   Frac (upper, lower) - (number.toFraction(Flt y)) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   Flt ((float upper / float lower) - y)
+                                                   (number.toFraction(Flt y)) - Frac (upper, lower)
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper * y, lower)
+                                                   (number.toFraction(Int y)) * Frac (upper, lower)
                                              | Int y, Frac (upper, lower) ->
-                                                   Frac (upper * y, lower)      
+                                                   (number.toFraction(Int y)) * Frac (upper, lower)     
                                              | Frac (upper, lower), Flt y ->
-                                                   Flt ((float upper / float lower) * y)
+                                                   (number.toFraction(Flt y)) * Frac (upper, lower)
                                              | Flt y, Frac (upper, lower) ->
-                                                   Flt ((float upper / float lower) * y)      
+                                                   (number.toFraction(Flt y)) * Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower * y)
+                                                   Frac (upper, lower) / (number.toFraction(Int y)) 
                                              | Int y, Frac (upper, lower) ->
-                                                   Frac (lower *  y, upper)      
+                                                   (number.toFraction(Int y)) / Frac (upper, lower)    
                                              | Frac (upper, lower), Flt y ->
-                                                   Flt ((float upper / float lower) / y)
+                                                   Frac (upper, lower) / (number.toFraction(Flt y)) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   Flt ((float upper / float lower) / y)      
+                                                   (number.toFraction(Flt y)) / Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * lowerTwo, lower*upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
-                                             // | Frac (upper, lower), Int y ->
-                                             //       Flt ((upper / lower) % y)
-                                             // | Int y, Frac (upper, lower) ->
-                                             //       Flt ((lower * y) % upper)
-                                             // | Frac (upper, lower), Flt y ->
-                                             //       Flt ((float upper / float lower) % y)
-                                             // | Flt y, Frac (upper, lower) ->
-                                             //       Flt ((y * float lower) % float upper)      
-                                             // | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
+                                             //| Frac (upper, lower), Int y ->
+                                             //      Frac (upper, lower) % (number.toFraction(Int y)) 
+                                             //| Int y, Frac (upper, lower) ->
+                                             //      (number.toFraction(Int y)) % Frac (upper, lower)
+                                             //| Frac (upper, lower), Flt y ->
+                                             //       Frac (upper, lower) % (number.toFraction(Flt y)) 
+                                             //| Flt y, Frac (upper, lower) ->
+                                             //       (number.toFraction(Flt y)) % Frac (upper, lower)     
+                                             //| Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                              //       Flt (((upper * lowerTwo) / lower) % upperTwo)       
                                              | _ -> Flt (number.fltVal x % number.fltVal y)
     static member Pow (x:number, y:number) = match (x, y) with
@@ -120,7 +140,7 @@ and number =
                                                    Flt (Math.Pow(squareRoot(y, float lower), float upper))     
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    // Frac ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))
-                                                    Flt (Math.Pow((float upper / float lower), (float upperTwo / float lowerTwo)))  
+                                                    number.toFraction(Flt (Math.Pow((float upper / float lower), (float upperTwo / float lowerTwo))))  
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
@@ -132,12 +152,12 @@ and number =
                                     | Flt n -> Flt +n
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
-                                     | Frac (upper, lower) -> Flt (Math.Floor(float upper/ float lower))
+                                     | Frac (upper, lower) -> number.toFraction(Flt (Math.Floor(float upper/ float lower)))
                                      | _ -> n
     static member Abs (n:number) = match n with
                                    | Int n -> Int (Math.Abs(n))
                                    | Flt n -> Flt (Math.Abs(n))
-                                   | Frac (upper, lower) -> Flt (float (Math.Abs(upper/lower)))
+                                   | Frac (upper, lower) -> number.toFraction(Flt (float (Math.Abs(upper/lower))))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arith =
@@ -383,35 +403,35 @@ let parseNeval tList =
         | Exp :: tail -> let (tLst, tval) = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(getFloatDegrees(Math.Sin(getFloatRadian tval)), 10) = 0.0 then
+                              if Math.Round(Math.Sin(getFloatRadian tval), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (getFloatDegrees(Math.Sin(getFloatRadian tval))))
+                              else (tLst, Flt (Math.Sin(getFloatRadian tval)))
         | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round(getFloatDegrees(Math.Cos(getFloatRadian tval)), 10) = 0.0 then
+                              if Math.Round(Math.Cos(getFloatRadian tval), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt (getFloatDegrees(Math.Cos(getFloatRadian tval))))                                
+                              else (tLst, Flt (Math.Cos(getFloatRadian tval)))                                
         | Trig Tan :: tail -> let (tLst, tval) = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
-                                if Math.Round((getFloatDegrees(Math.Tan(getFloatRadian tval))), 10) = 0.0 then
+                                if Math.Round((Math.Tan(getFloatRadian tval)), 10) = 0.0 then
                                   (tLst, Flt 0.0) 
-                                else (tLst, Flt (getFloatDegrees(Math.Tan(getFloatRadian tval))))
+                                else (tLst, Flt (Math.Tan(getFloatRadian tval)))
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round ((getFloatDegrees(Math.Asin(getFloatRadian tval))), 10) = 0.0 then
+                                if Math.Round ((Math.Asin(getFloatRadian tval)), 10) = 0.0 then
                                  (tLst, Flt 0.0)
-                                else (tLst, Flt (getFloatDegrees(Math.Asin(getFloatRadian tval))))
+                                else (tLst, Flt (Math.Asin(getFloatRadian tval)))
                                else raise sinUndefinedError
         | Trig ACos :: tail -> let (tLst, tval) = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round(getFloatDegrees((Math.Acos(getFloatRadian tval))), 10) = 0.0 then
+                                if Math.Round((Math.Acos(getFloatRadian tval)), 10) = 0.0 then
                                  (tLst, Flt 0.0)  
-                                else (tLst, Flt (getFloatDegrees(Math.Acos(getFloatRadian tval))))
+                                else (tLst, Flt (Math.Acos(getFloatRadian tval)))
                                else raise cosUndefinedError 
         | Trig ATan :: tail -> let (tLst, tval) = NR tail
-                               if Math.Round(getFloatDegrees(Math.Atan(getFloatRadian tval)),10) = 0.0 then 
+                               if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
-                               else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
+                               else (tLst, Flt (Math.Atan(getFloatRadian tval)))
         | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
                                                                          if variables.[name].GetType() = tVal.GetType() then
                                                                             variables <- variables.Remove(name)
