@@ -160,10 +160,17 @@ public partial class MainView : UserControl
         double currentX = xMin;
         for (int point = 0; point < points; point++)
         {
-            currentX = xMin + point * step;
-            Program.guiIntegration("x=" + currentX.ToString());
+            currentX = (double)(xMin + point * step);
+            if ((int)currentX == (double)currentX)
+            {
+                Program.guiIntegration("x=" + currentX + ".0");
+            }
+            else
+            {
+                Program.guiIntegration("x=" + currentX);
+            }
             y = Program.guiIntegration("y=" + yExpr);
-            Debug.WriteLine("x = " + currentX.ToString() + ", y = " + y.ToString());
+            Debug.WriteLine("point: " + point.ToString() + ". x = " + currentX.ToString() + ", y = " + y.ToString());
             mvm.Points.Add(new DataPoint(Convert.ToDouble(currentX), Program.number.fltVal(y)));
         }
     }
