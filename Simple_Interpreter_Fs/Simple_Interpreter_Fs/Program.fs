@@ -362,15 +362,15 @@ let parseNeval tList =
         | _ -> (tList, value)
     and NR tList =
         match tList with
-        | Arith Sub :: tail -> let (tList, tval) = NR tail
-                               (tList, -tval)
-        | Arith Add :: tail -> let (tList, tval) = NR tail
-                               (tList, +tval)
+        | Arith Sub :: tail -> let (tLst, tval) = NR tail
+                               (tLst, -tval)
+        | Arith Add :: tail -> let (tLst, tval) = NR tail
+                               (tLst, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
-        | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail -> (tail, Frac (num, denom))
-        | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
-        | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        // | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail -> (tail, Frac (num, denom))
+        // | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        // | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
         | Log LogN :: tail -> let (tLst, tval) = NR tail
@@ -412,38 +412,38 @@ let parseNeval tList =
                                if Math.Round(getFloatDegrees(Math.Atan(getFloatRadian tval)),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (getFloatDegrees(Math.Atan(getFloatRadian tval))))
-        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
+        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let (tLst,tVal) = E tail
                                                                          if variables.[name].GetType() = tVal.GetType() then
                                                                             variables <- variables.Remove(name)
                                                                             variables <- variables.Add(name, tVal)
-                                                                            (tail, tVal)
+                                                                            (tLst, tVal)
                                                                          else
                                                                              Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tVal.TypeToString())
                                                                              raise typeError
-        | Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                        variables <- variables.Add(name, tVal)
-                                        (tail, tVal)
-        // | Typ Auto :: Var name :: Assign :: tail -> let tVal = snd (E tail)
-        //                                             variables <- variables.Add(name, tVal)
-        //                                             (tail, tVal)
-        | Typ Integer :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+        | Var name :: Assign :: tail -> let (tLst, tval) = E tail
+                                        variables <- variables.Add(name, tval)
+                                        (tLst, tval)
+        | Typ Auto :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
+                                                    variables <- variables.Add(name, tVal)
+                                                    (tList, tVal)
+        | Typ Integer :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                        if tVal.GetType() = (Int 0).GetType() then
                                                            variables <- variables.Add(name, tVal)
-                                                           (tail, tVal)
+                                                           (tLst, tVal)
                                                        else
                                                            Console.WriteLine("Value "+ tVal.ToString() + " not an integer")
                                                            raise typeError
-        | Typ Float :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+        | Typ Float :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                      if tVal.GetType() = (Flt 0.0).GetType() then
                                                           variables <- variables.Add(name, tVal)
-                                                          (tail, tVal)
+                                                          (tLst, tVal)
                                                      else
                                                          Console.WriteLine("Value " + tVal.ToString() + " not a float")
                                                          raise typeError
-        | Typ Fraction :: Var name :: Assign :: tail -> let tVal = snd (E tail)
+        | Typ Fraction :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                         if tVal.GetType() = (Frac (0,1)).GetType() then
                                                           variables <- variables.Add(name, tVal)
-                                                          (tail, tVal)
+                                                          (tLst, tVal)
                                                         else
                                                           Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
                                                           raise typeError                                               
