@@ -343,8 +343,9 @@ let parseNeval tList =
                                                                                | Num value -> (tList, value)
                                                                                | _ -> raise NaNError
                                                                  | Function -> match tail.Head with
-                                                                               | Lpar   ->  let (paramsToSub) = getP tail.Tail
+                                                                               | Lpar   ->  let (paramsToSub, tailEnd) = getP tail.Tail
                                                                                             printTList paramsToSub
+                                                                                            let substitutedTList = subP tList
                                                                                             Console.WriteLine("YAYYAYYAYAYAY")
                                                                                             Console.ReadLine();
                                                                                             raise parseError
@@ -374,17 +375,28 @@ let parseNeval tList =
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
     
-    and getP (inTList) = 
-        let rec scan t =
-            match t with
+    and getP inTList = 
+        let rec scan (tList) =
+            match tList with
             | Var name :: tail ->           Var name :: scan tail
             | Num (Int value) :: tail ->    Num (Int value) :: scan tail
             | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
             | Rpar :: tail ->               []
-            | _ ->  printTList t
-                    Console.ReadLine();
-                    raise parseError
-        scan inTList
+            | _ ->  raise parseError
+        let rec getTailEnd (tList) = 
+            match tList with
+            | Var name :: tail ->           Var name :: getTailEnd tail
+            | Num (Int value) :: tail ->    Num (Int value) :: getTailEnd tail
+            | Num (Flt value) :: tail ->    Num (Flt value) :: getTailEnd tail
+            | Rpar :: tail ->               []
+            | _ ->  raise parseError
+        (scan inTList, getTailEnd inTList)
+
+
+
+    and subP tList =
+        tList
+
     E tList
     
 let test (input:string, correctOut) =
