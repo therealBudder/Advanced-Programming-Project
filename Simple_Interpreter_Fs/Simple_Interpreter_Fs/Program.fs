@@ -67,7 +67,7 @@ let isdigit c = System.Char.IsDigit c
 let isletter c = System.Char.IsLetter c
 let isletterordigit c = System.Char.IsLetterOrDigit c
 let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
-
+let indexOf (e, array) = Array.IndexOf(array, e)
 
 let lexError = System.Exception("invalid symbol in expression")
 let varError = System.Exception("incorrect var assignment")
@@ -82,6 +82,8 @@ let unclosedBracketsError = System.Exception("Syntax error Brackets must be clos
 let undefinedVarError = System.Exception("Syntax error Variable is not defined")
 let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
 let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
+let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")
+
 
 let rec printTList (lst:list<terminal>) : list<string> = 
     match lst with
@@ -344,28 +346,24 @@ let parseNeval tList =
                                                                                | _ -> raise NaNError
                                                                  | Function -> match tail.Head with
                                                                                | Lpar   ->  let (paramsToSub, tailEnd) = getP tail.Tail
-                                                                                            printTList paramsToSub
-                                                                                            let substitutedTList = subP tList
-                                                                                            Console.WriteLine("YAYYAYYAYAYAY")
-                                                                                            Console.ReadLine();
-                                                                                            raise parseError
+                                                                                            let substitutedTList = subP (paramsToSub, pList, tList)
+                                                                                            printTList substitutedTList |> ignore
+                                                                                            
+                                                                                            let (fTail, fTVal) = E substitutedTList
+                                                                                            (tailEnd, fTVal)
                                                                                
                                                                                | _      ->  Console.WriteLine(tList.Head);
-                                                                                            Console.ReadLine();
+                                                                                            Console.ReadLine() |> ignore
                                                                                             raise parseError
                                                                  | _ -> Console.WriteLine("Invalid BindingType in table")
                                                                         raise bindingTypeError
 
         | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
                                                                        raise undefinedVarError
-        //| Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
-        //| Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
-        //                                                             raise undefinedVarError
-        
+        //-----------------------------------------------------------------------------------------------------------------------
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
-        //-----------------------------------------------------------------------------------------------------------------------
         //-----------------------------------------------------------------------------------------------------------------------
     and P (pList, tList) =
         match tList with
@@ -376,26 +374,35 @@ let parseNeval tList =
                raise parseError
     
     and getP inTList = 
-        let rec scan (tList) =
+        let rec scan tList =
             match tList with
             | Var name :: tail ->           Var name :: scan tail
             | Num (Int value) :: tail ->    Num (Int value) :: scan tail
             | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
             | Rpar :: tail ->               []
             | _ ->  raise parseError
-        let rec getTailEnd (tList) = 
+        let rec getTailEnd tList = 
             match tList with
-            | Var name :: tail ->           Var name :: getTailEnd tail
-            | Num (Int value) :: tail ->    Num (Int value) :: getTailEnd tail
-            | Num (Flt value) :: tail ->    Num (Flt value) :: getTailEnd tail
-            | Rpar :: tail ->               []
+            | Var name :: tail ->           getTailEnd tail
+            | Num (Int value) :: tail ->    getTailEnd tail
+            | Num (Flt value) :: tail ->    getTailEnd tail
+            | Rpar :: tail ->               tail
             | _ ->  raise parseError
         (scan inTList, getTailEnd inTList)
 
-
-
-    and subP tList =
-        tList
+    and subP (inParamsToSub, inPList, inTList) =
+        let pArray = Array.ofList inPList
+        let rec scan tList =
+            match tList with
+            | [] -> []
+            | Var name :: tail ->   let i = indexOf (Var name, pArray)
+                                    if (i <> -1) then
+                                        let swap = inParamsToSub[i]
+                                        swap :: scan tail
+                                    else
+                                        raise unmatchedParamError
+            | head :: tail -> head :: scan tail
+        scan inTList
 
     E tList
     
