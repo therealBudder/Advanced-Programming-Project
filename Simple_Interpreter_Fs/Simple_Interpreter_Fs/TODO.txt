@@ -1,2 +1,0 @@
-move fn token definition to reservedWords
-clean up comments
