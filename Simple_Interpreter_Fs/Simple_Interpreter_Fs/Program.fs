@@ -255,6 +255,7 @@ let isReservedWord(inString) =
     | "float" -> Typ Float
     | "frac" -> Typ Fraction
     | "var" -> Typ Auto
+    | "fn" -> Func
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -283,8 +284,6 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
-        |'f'::'n'::tail -> Func :: scan tail // CHANGE FOR RESERVED WORD
-
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
@@ -495,13 +494,10 @@ let parseNeval tList =
                                                                                     (tList, (Int)0)
         | Func :: Var name :: Lpar ::tail ->    let (paramList, tList) = getPSignature ([], tail)
                                                 symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
-                                                //Console.WriteLine(symbolTable[name])   //test
 
                                                 (tList, (Int)0)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
-                                                                 //| _ -> Console.WriteLine("Invalid BindingType in table")
-                                                                 //       raise bindingTypeError
 
         | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
                                                                        raise undefinedVarError
@@ -557,7 +553,7 @@ let parseNeval tList =
             | Num (Int value) :: tail ->    getTailEnd tail
             | Num (Flt value) :: tail ->    getTailEnd tail
             | Rpar :: tail ->               tail
-            | _ ->  printTList tList
+            | _ ->  printTList tList |> ignore
                     raise parseError
         (scan inTList, getTailEnd inTList)
     and subP (inParamsToSub, inPList, inTList) =

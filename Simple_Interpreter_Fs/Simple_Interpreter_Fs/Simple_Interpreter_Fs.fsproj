@@ -50,8 +50,6 @@
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
-    <Content Include="temp.txt" />
-    <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
