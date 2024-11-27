@@ -38,13 +38,13 @@ type terminal =
         | Num n -> n
         | _ -> raise (Exception("Cannot cast this terminal type to a number")) 
 and number =
-    Int of int | Flt of float | Bool of int8 | Frac of int * int
+    Int of int | Flt of float | Bool of bool | Frac of int * int
     override this.ToString() =
         match this with
         | Int i -> i.ToString()
         | Flt f -> f.ToString()
         | Frac (num,denom) -> num.ToString() + "/" + denom.ToString()
-        | Bool b -> if b = 0y then "false" else "true"
+        | Bool b -> b.ToString()
     member this.TypeToString() =
         match this with
         | Int _ -> "int"
@@ -55,26 +55,34 @@ and number =
                              | Flt f -> f
                              | Int i -> float i
                              | Frac (upper,lower) -> float upper / float lower
+                             | Bool b -> if b then 1.0 else 0.0
     static member intVal n = match n with
                              | Flt f -> int f
                              | Int i -> i
                              | Frac (num,denom) -> int (float num / float denom)
+                             | Bool b -> if b then 1 else 0
     member this.ToInt() =
         match this with
         | Int i -> Int i
         | Flt f -> Int (int f)
         | Frac (n,d) -> Int (int (number.fltVal(Frac(n,d))))
+        | Bool b -> if b then Int 1 else Int 0
     
-    static member toFraction inputIn =
+    member this.ToBool() =
+        match this with
+        | Int i -> if i = 0 then Bool false else Bool true
+        | Flt f -> if f = 0.0 then Bool false else Bool true
+        | Frac (num,denom) -> if num = 0 then Bool false else Bool true
+        | Bool b -> Bool b
+    static member toFraction(inputIn) =
      let (num, denom) = number.toFractionHelp(inputIn, Int 1)
-     Frac (number.intVal(num),number.intVal(denom))    
+     Frac (number.intVal(num),number.intVal(denom))
+     
     static member toFractionHelp(num, denom) =
         if num % Int 10 <> Flt 0.0 then
-            number.toFractionHelp(num*Flt 10.0, denom*Int 10)
+            number.toFractionHelp(num * Flt 10.0, denom * Int 10)
         else
-            let fracUpp = num/ Int 10
-            let fracDown = denom/ Int 10
-            (fracUpp, fracDown)
+            (num / Int 10, denom / Int 10)
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
@@ -112,7 +120,7 @@ and number =
                                              | Flt y, Frac (upper, lower) ->
                                                    (number.toFraction(Flt y)) * Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper * upperTwo, lower*lowerTwo) 
+                                                   Frac (upper * upperTwo, lower * lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
@@ -125,7 +133,7 @@ and number =
                                              | Flt y, Frac (upper, lower) ->
                                                    (number.toFraction(Flt y)) / Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper * lowerTwo, lower*upperTwo) 
+                                                   Frac (upper * lowerTwo, lower * upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
@@ -212,10 +220,10 @@ let logInputError = Exception("Input Error By User for function Log and Ln")
 let unclosedBracketsError = Exception("Syntax error Brackets must be closed")
 let undefinedVarError = Exception("Syntax error Variable is not defined")
 let typeError = Exception("Type mismatch")
-let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")
-let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
-let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
-let funcAsParamError = System.Exception("Syntax error Functions not yet supported as functions")
+let unmatchedParamError = Exception("Syntax error Function body contains parameters not specified in function signature")
+let NaNError = Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
+let bindingTypeError = Exception("Syntax error BindingType in table is undefined")
+let funcAsParamError = Exception("Syntax error Functions not yet supported as functions")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -271,8 +279,8 @@ let isReservedWord(inString) =
     | "frac" -> Typ Fraction
     | "var" -> Typ Auto
     | "fn" -> Func
-    | "true" -> Num (Bool 1y)
-    | "false" -> Num (Bool 0y)
+    | "true" -> Num (Bool true)
+    | "false" -> Num (Bool false)
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -413,6 +421,11 @@ let parseNeval tList =
     and Lopt (tList, value) =
         match tList with
         | Logical And :: tail -> let (tLst, tval) = R tail
+                                 // let result = 
+                                 //     match value, tval with
+                                 //     | Bool false, _ -> Bool true
+                                 //     | _ , Bool false -> Bool true
+                                 //     | _ -> Bool true
                                  Lopt (tLst, tval)
         | Logical Or :: tail -> let (tLst, tval) = R tail
                                 Lopt (tLst, tval)
