@@ -11,7 +11,6 @@ let rec squareRoot ((inputValue:float), (power:float)) =
    | _ -> inputValue  
 
 type terminal = 
-    | Func
     | Rem
     | Pow
     | Exp
@@ -174,14 +173,7 @@ let isdigit c = Char.IsDigit c
 let isletter c = Char.IsLetter c
 let isletterordigit c = Char.IsLetterOrDigit c
 let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
-let indexOf (e, array) = Array.IndexOf(array, e)
-let rec printTList (lst:list<terminal>) : list<string> = 
-    match lst with
-    head::tail -> Console.Write("{0} ",head.ToString())
-                  printTList tail
-                  
-    | [] -> Console.Write("EOL\n")
-            []
+  
 
 let lexError = Exception("invalid symbol in expression")
 let varError = Exception("incorrect var assignment")
@@ -197,10 +189,6 @@ let logInputError = Exception("Input Error By User for function Log and Ln")
 let unclosedBracketsError = Exception("Syntax error Brackets must be closed")
 let undefinedVarError = Exception("Syntax error Variable is not defined")
 let typeError = Exception("Type mismatch")
-let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")
-let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
-let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
-let funcAsParamError = System.Exception("Syntax error Functions not yet supported as functions")
 
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
@@ -220,7 +208,6 @@ and scFloat(iStr, iVal, weight) =
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)    
-
 // and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
 //     let upper = match iValString with
 //                 c :: tail when isdigit c ->
@@ -283,8 +270,6 @@ let lexer input =
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
         | '='::tail -> Assign:: scan tail
-        |'f'::'n'::tail -> Func :: scan tail // CHANGE FOR RESERVED WORD
-
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
                                       match iStr with
@@ -366,11 +351,7 @@ let parser tList =
         | _ -> raise parseError
     E tList
 
-//let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
-let mutable symbolTable = Map.empty
-type BindingType =
-    | Variable
-    | Function
+let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
 
 let parseNeval tList = 
     let rec E tList = (T >> Eopt) tList
@@ -451,61 +432,45 @@ let parseNeval tList =
                                if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (Math.Atan(getFloatRadian tval)))
-        | Pi :: tail -> (tail, Flt Math.PI)
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tVal = snd (E tail)
-                                                                            let (b_type, pList, tList: terminal list) = symbolTable.[name]
-                                                                            if (tList.Head.GetType() = tVal.GetType()) && (b_type = Variable) then
-                                                                                symbolTable <- symbolTable.Remove(name)
-                                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-                                                                            (tail, tVal)
-        | Var name :: Assign :: tail -> let tVal = snd (E tail)
-                                        symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-                                        (tail, tVal)
+        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail) 
+                                                                         if variables.[name].GetType() = tVal.GetType() then
+                                                                            variables <- variables.Remove(name)
+                                                                            variables <- variables.Add(name, tVal)
+                                                                            (tList, tVal)
+                                                                         else
+                                                                             Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tVal.TypeToString())
+                                                                             raise typeError
+        | Var name :: Assign :: tail -> let (tLst, tval) = E tail
+                                        variables <- variables.Add(name, tval)
+                                        (tLst, tval)
         | Typ Auto :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
-                                                    symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                    variables <- variables.Add(name, tVal)
                                                     (tList, tVal)
         | Typ Integer :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                        if tVal.GetType() = (Int 0).GetType() then
-                                                           symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                           variables <- variables.Add(name, tVal)
                                                            (tLst, tVal)
                                                        else
                                                            Console.WriteLine("Value "+ tVal.ToString() + " not an integer")
                                                            raise typeError
         | Typ Float :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                      if tVal.GetType() = (Flt 0.0).GetType() then
-                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                          variables <- variables.Add(name, tVal)
                                                           (tLst, tVal)
                                                      else
                                                          Console.WriteLine("Value " + tVal.ToString() + " not a float")
                                                          raise typeError
         | Typ Fraction :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                         if tVal.GetType() = (Frac (0,1)).GetType() then
-                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                          variables <- variables.Add(name, tVal)
                                                           (tLst, tVal)
                                                         else
                                                           Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
-                                                          raise typeError
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Func :: Var name :: Lpar :: tail when symbolTable.ContainsKey(name) ->    let (paramList, tList) = getPSignature ([], tail)
-                                                                                    symbolTable <- symbolTable.Remove(name)
-                                                                                    symbolTable <- symbolTable.Add(name, (Function, paramList, tList))                                                                        
-                                                                                    (tList, (Int)0)
-        | Func :: Var name :: Lpar ::tail ->    let (paramList, tList) = getPSignature ([], tail)
-                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
-                                                //Console.WriteLine(symbolTable[name])   //test
-
-                                                (tList, (Int)0)
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
-                                                                 //| _ -> Console.WriteLine("Invalid BindingType in table")
-                                                                 //       raise bindingTypeError
-
-        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
-                                                                       raise undefinedVarError
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                          raise typeError                                               
+        | Var name :: tail when variables.ContainsKey(name) -> (tail, variables.[name])
+        | Pi :: tail -> (tail, Flt Math.PI)
+        | Var name :: tail when not (variables.ContainsKey(name)) -> Console.WriteLine("Undefined variable " + name)
+                                                                     raise undefinedVarError
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tail, tval)
@@ -513,69 +478,16 @@ let parseNeval tList =
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
-
-    and FN (name, tail:terminal list) =
-        let (bType, pList, tList) = symbolTable.[name]
-        match bType with
-        | Variable ->   match tList.Head with
-                        | Num value -> (tList, value)
-                        | _ -> raise NaNError
-        | Function ->   match tail.Head with
-                        | Lpar   -> let (paramsToSub, tailEnd) = getP tail.Tail
-                                    let substitutedTList = subP (paramsToSub, pList, tList)
-                                                                                            
-                                    let (fTail, fTVal) = E substitutedTList
-                                    (tailEnd, fTVal)
-                                                                               
-                        | _      -> Console.WriteLine(tList.Head);
-                                    Console.ReadLine() |> ignore
-                                    raise parseError
-
-    and getPSignature (pList, tList) =
-        match tList with
-        | Var name :: tail -> getPSignature ((List.append pList [Var name]), tail)
-        | Rpar :: Assign :: tail -> (pList, tail)
-        | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
-               for t in tList do Console.Write(t.ToString() + " ")
-               raise parseError
-    and getP inTList = 
-        let rec scan tList =
-            match tList with
-            | Var name :: tail ->   let (b, p, t) = symbolTable[name] 
-                                    match b with
-                                    | Variable ->   t.Head :: scan tail
-                                    | Function ->   let (tList, fnResult) = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
-                                                    Num fnResult :: scan tList
-            | Num (Int value) :: tail ->    Num (Int value) :: scan tail
-            | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
-            | Rpar :: tail ->               []
-            | _ ->  raise parseError
-        let rec getTailEnd tList = 
-            match tList with
-            | Lpar :: tail ->               getTailEnd tail
-            | Var name :: tail ->           getTailEnd tail
-            | Num (Int value) :: tail ->    getTailEnd tail
-            | Num (Flt value) :: tail ->    getTailEnd tail
-            | Rpar :: tail ->               tail
-            | _ ->  printTList tList
-                    raise parseError
-        (scan inTList, getTailEnd inTList)
-    and subP (inParamsToSub, inPList, inTList) =
-        let pArray = Array.ofList inPList
-        let rec scan tList =
-            match tList with
-            | [] -> []
-            | Var name :: tail ->   let i = indexOf (Var name, pArray)
-                                    if (i <> -1) then
-                                        let swap = inParamsToSub[i]
-                                        swap :: scan tail
-                                    else
-                                        raise unmatchedParamError
-            | head :: tail -> head :: scan tail
-        scan inTList
     E tList
 
 
+let rec printTList (lst:list<terminal>) : list<string> = 
+    match lst with
+    head::tail -> Console.Write("{0} ",head.ToString())
+                  printTList tail
+                  
+    | [] -> Console.Write("EOL\n")
+            []
     
 let test (input:string, correctOut) =
     let oList = lexer input
@@ -629,7 +541,7 @@ let rec main' argv  =
     let input:string = getInputString()
     match str2lst input with
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
-    | '\\' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> symbolTable <- Map.empty
+    | '\\' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> variables <- Map.empty
                                                          Console.WriteLine("Cleared symbol table")
                                                          main' argv
     | _ -> let oList = lexer input
@@ -641,14 +553,13 @@ let rec main' argv  =
            Console.WriteLine("Result = {0}", snd Out)
            //testInputs
            Console.WriteLine("Symbol table:")
-           Console.WriteLine(symbolTable)
-           //for entry in symbolTable do
-               //Console.Write("{0} {1} = {2} ", entry.Value.TypeToString(), entry.Key, entry.Value.ToString())
+           for entry in variables do
+               Console.Write("{0} {1} = {2} ", entry.Value.TypeToString(), entry.Key, entry.Value.ToString())
            // Console.WriteLine(variables)
            Console.WriteLine();
-           main' argv |> ignore
+           main' argv
            0
 
     
     
-    
+    // 
