@@ -57,8 +57,8 @@ and number =
      let (num, denom) = number.toFractionHelp(inputIn, Int 1)
      Frac (number.intVal(num),number.intVal(denom))    
     static member toFractionHelp(num, denom) =
-        if num % Int 10 <> Flt 0 then
-            number.toFractionHelp(num*Flt 10, denom*Int 10)
+        if num % Int 10 <> Flt 0.0 then
+            number.toFractionHelp(num*Flt 10.0, denom*Int 10)
         else
             let fracUpp = num/ Int 10
             let fracDown = denom/ Int 10
@@ -432,13 +432,13 @@ let parseNeval tList =
                                if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (Math.Atan(getFloatRadian tval)))
-        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail) 
-                                                                         if variables.[name].GetType() = tVal.GetType() then
+        | Var name :: Assign :: tail when variables.ContainsKey(name) -> let (tLst, tval) = E tail 
+                                                                         if variables.[name].GetType() = tval.GetType() then
                                                                             variables <- variables.Remove(name)
-                                                                            variables <- variables.Add(name, tVal)
-                                                                            (tList, tVal)
+                                                                            variables <- variables.Add(name, tval)
+                                                                            (tLst, tval)
                                                                          else
-                                                                             Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tVal.TypeToString())
+                                                                             Console.WriteLine("Variable " + name + " expected type " + variables.[name].TypeToString() + " but got type " + tval.TypeToString())
                                                                              raise typeError
         | Var name :: Assign :: tail -> let (tLst, tval) = E tail
                                         variables <- variables.Add(name, tval)
