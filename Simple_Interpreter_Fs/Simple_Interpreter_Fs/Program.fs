@@ -389,6 +389,7 @@ let parser tList =
         | Num (Int value) :: tail -> tail
         | Num (Flt value) :: tail -> tail
         | Num (Frac (num,denom)) :: tail -> tail
+        | Num (Bool value) :: tail -> tail
         | Exp :: tail -> (NR >> Fopt) tail
         | Log LogN :: tail -> (NR >> Fopt) tail
         | Log LogOther :: tail -> (NR >> Fopt) tail
@@ -462,6 +463,7 @@ let parseNeval tList =
                                (tLst, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
+        | Num (Bool value) :: tail -> (tail, Bool value)
         | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail -> (tail, Frac (num, denom))
         | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
