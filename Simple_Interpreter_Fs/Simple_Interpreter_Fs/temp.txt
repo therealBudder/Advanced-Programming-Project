@@ -1,0 +1,129 @@
+type terminal = 
+    | Func
+
+let indexOf (e, array) = Array.IndexOf(array, e)
+
+let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
+let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")    
+let lexError = System.Exception("invalid symbol in expression")
+let varError = System.Exception("incorrect var assignment")
+let intVal (c:char) = (int)((int)c - (int)'0')
+let floatVal (c:char) = (float)((int)c - (int)'0')
+let strVal (c:char) = (string)c
+let parseError = System.Exception("Parser error")
+let divisionByZeroError = System.Exception("Division by zero is undefined")
+let tanUndefinedError = System.Exception("Tan call will result in undefined behavior.")
+let logInputError = System.Exception("Input Error By User for function Log and Ln")
+let unclosedBracketsError = System.Exception("Syntax error Brackets must be closed")
+
+|'f'::'n'::tail -> Func :: scan tail
+
+| Var name :: Assign :: tail when variables.ContainsKey(name) -> let tVal = snd (E tail)
+                                                                         variables <- variables.Remove(name)
+                                                                         variables <- variables.Add(name, tVal)
+                                                                         
+                                                                         symbolTable <- symbolTable.Remove(name)
+                                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                                         Console.WriteLine(symbolTable[name])   //test
+
+                                                                         (tail, tVal)
+
+        | Var name :: Assign :: tail -> let tVal = snd (E tail)
+                                        variables <- variables.Add(name, tVal)
+
+                                        symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                        Console.WriteLine(symbolTable[name])   //test
+
+                                        (tail, tVal)
+
+let mutable symbolTable = Map.empty
+type BindingType =
+    | Variable
+    | Function
+
+| Var name :: tail when symbolTable.ContainsKey(name) -> let (bType, pList, tList) = symbolTable.[name]
+                                                                 match bType with
+                                                                 | Variable -> match tList.Head with
+                                                                               | Num value -> (tList, value)
+                                                                               | _ -> raise NaNError
+                                                                 | Function -> match tail.Head with
+                                                                               | Lpar   ->  let (paramsToSub, tailEnd) = getP tail.Tail
+                                                                                            let substitutedTList = subP (paramsToSub, pList, tList)
+                                                                                            printTList substitutedTList |> ignore
+                                                                                            
+                                                                                            let (fTail, fTVal) = E substitutedTList
+                                                                                            (tailEnd, fTVal)
+                                                                               
+                                                                               | _      ->  Console.WriteLine(tList.Head);
+                                                                                            Console.ReadLine() |> ignore
+                                                                                            raise parseError
+                                                                 | _ -> Console.WriteLine("Invalid BindingType in table")
+                                                                        raise bindingTypeError
+
+        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
+                                                                       raise undefinedVarError
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //-----------------------------------------------------------------------------------------------------------------------
+        //FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS
+        //-----------------------------------------------------------------------------------------------------------------------
+        | Func :: Var name :: Lpar :: tail when functions.ContainsKey(name) ->  let (paramList, tList) = P ([], tail)
+                                                                                functions <- functions.Remove(name)
+                                                                                functions<- functions.Add(name, (paramList, tList))
+
+                                                                                symbolTable <- symbolTable.Remove(name)
+                                                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                                                                Console.WriteLine(symbolTable[name])   //test
+                                                                        
+                                                                                (tList, (Int)0)
+
+        | Func :: Var name :: Lpar ::tail ->    let (paramList, tList) = P ([], tail)
+                                                functions <- functions.Add(name, (paramList, tList))
+                                                Console.WriteLine(functions[name])   //test
+                                      
+                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+                                                Console.WriteLine(symbolTable[name])   //test8
+
+                                                (tList, (Int)0)
+        //-----------------------------------------------------------------------------------------------------------------------
+        | _ -> Console.WriteLine("Unexpected syntax at:")
+               for t in tList do Console.Write(t.ToString() + " ")
+               raise parseError
+        //-----------------------------------------------------------------------------------------------------------------------
+    and P (pList, tList) =
+        match tList with
+        | Var name :: tail -> P ((List.append pList [Var name]), tail)
+        | Rpar :: Assign :: tail -> (pList, tail)
+        | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
+               for t in tList do Console.Write(t.ToString() + " ")
+               raise parseError
+    
+    and getP inTList = 
+        let rec scan tList =
+            match tList with
+            | Var name :: tail ->           Var name :: scan tail
+            | Num (Int value) :: tail ->    Num (Int value) :: scan tail
+            | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
+            | Rpar :: tail ->               []
+            | _ ->  raise parseError
+        let rec getTailEnd tList = 
+            match tList with
+            | Var name :: tail ->           getTailEnd tail
+            | Num (Int value) :: tail ->    getTailEnd tail
+            | Num (Flt value) :: tail ->    getTailEnd tail
+            | Rpar :: tail ->               tail
+            | _ ->  raise parseError
+        (scan inTList, getTailEnd inTList)
+
+    and subP (inParamsToSub, inPList, inTList) =
+        let pArray = Array.ofList inPList
+        let rec scan tList =
+            match tList with
+            | [] -> []
+            | Var name :: tail ->   let i = indexOf (Var name, pArray)
+                                    if (i <> -1) then
+                                        let swap = inParamsToSub[i]
+                                        swap :: scan tail
+                                    else
+                                        raise unmatchedParamError
+            | head :: tail -> head :: scan tail
+        scan inTList
