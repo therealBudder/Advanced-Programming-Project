@@ -12,12 +12,15 @@ let rec squareRoot ((inputValue:float), (power:float)) =
 
 type terminal = 
     | Func
+    | For
     | Rem
     | Pow
     | Exp
     | Log of log
     | Lpar
     | Rpar
+    | Lbrace
+    | Rbrace
     | Neg
     | Arith of arith
     | Num of number
@@ -168,6 +171,29 @@ and log =
 and typ =
     Integer | Float | Fraction | Auto
 
+//Errors
+let lexError = Exception("invalid symbol in expression")
+let varError = Exception("incorrect var assignment")
+let intVal (c:char) = (int)((int)c - (int)'0')
+let floatVal (c:char) = (float)((int)c - (int)'0')
+let strVal (c:char) = (string)c
+let parseError = Exception("Parser error")
+let divisionByZeroError = Exception("Division by zero is undefined")
+let tanUndefinedError = Exception("Tan call will result in undefined behavior.")
+let sinUndefinedError = Exception("Sin call will result in undefined behavior.")
+let cosUndefinedError = Exception("Cos call will result in undefined behavior.")
+let logInputError = Exception("Input Error By User for function Log and Ln")
+let unclosedParensError = Exception("Syntax error Unmatched Parentheses")
+let unclosedBracketsError = Exception("Syntax error Unmatched Bracket")
+let unclosedBracesError = Exception("Syntax error Unmatched Brace")
+let undefinedVarError = Exception("Syntax error Variable is not defined")
+let typeError = Exception("Type mismatch")
+let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")
+let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
+let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
+let funcAsParamError = System.Exception("Syntax error Functions not yet supported as functions")
+
+//Functions
 let str2lst s = [for c in s -> c]
 let isblank c = Char.IsWhiteSpace c
 let isdigit c = Char.IsDigit c
@@ -182,26 +208,6 @@ let rec printTList (lst:list<terminal>) : list<string> =
                   
     | [] -> Console.Write("EOL\n")
             []
-
-let lexError = Exception("invalid symbol in expression")
-let varError = Exception("incorrect var assignment")
-let intVal (c:char) = (int)((int)c - (int)'0')
-let floatVal (c:char) = (float)((int)c - (int)'0')
-let strVal (c:char) = (string)c
-let parseError = Exception("Parser error")
-let divisionByZeroError = Exception("Division by zero is undefined")
-let tanUndefinedError = Exception("Tan call will result in undefined behavior.")
-let sinUndefinedError = Exception("Sin call will result in undefined behavior.")
-let cosUndefinedError = Exception("Cos call will result in undefined behavior.")
-let logInputError = Exception("Input Error By User for function Log and Ln")
-let unclosedBracketsError = Exception("Syntax error Brackets must be closed")
-let undefinedVarError = Exception("Syntax error Variable is not defined")
-let typeError = Exception("Type mismatch")
-let unmatchedParamError = System.Exception("Syntax error Function body contains parameters not specified in function signature")
-let NaNError = System.Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
-let bindingTypeError = System.Exception("Syntax error BindingType in table is undefined")
-let funcAsParamError = System.Exception("Syntax error Functions not yet supported as functions")
-
 let checkAgainstTanList(x:float) =
     tanUndefinedList |> List.contains x
 let checkPositive (x:float) =
@@ -256,6 +262,7 @@ let isReservedWord(inString) =
     | "frac" -> Typ Fraction
     | "var" -> Typ Auto
     | "fn" -> Func
+    | "for" -> For
     | _ -> Null
 
 let rec scName(remain : list<char>, word : string) =
@@ -283,6 +290,8 @@ let lexer input =
         | '^'::tail -> Pow :: scan tail
         | '('::tail -> Lpar:: scan tail
         | ')'::tail -> Rpar:: scan tail
+        | '{'::tail -> Lbrace:: scan tail
+        | '}'::tail -> Rbrace:: scan tail
         | '='::tail -> Assign:: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
@@ -361,7 +370,7 @@ let parser tList =
         | Trig ATan :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
-                          | _ -> raise unclosedBracketsError
+                          | _ -> raise unclosedParensError
         | _ -> raise parseError
     E tList
 
@@ -454,12 +463,21 @@ let parseNeval tList =
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tVal = snd (E tail)
-                                                                            let (b_type, pList, tList: terminal list) = symbolTable.[name]
-                                                                            if (tList.Head.GetType() = tVal.GetType()) && (b_type = Variable) then
-                                                                                symbolTable <- symbolTable.Remove(name)
-                                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-                                                                            (tail, tVal)
+        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let (tList, tVal) = E tail
+                                                                            let (b, p, t: terminal list) = symbolTable.[name]
+                                                                            match t with
+                                                                            | Num nVal :: tail ->   if (nVal.GetType() = tVal.GetType()) then //&& (b_type = Variable)
+                                                                                                        Console.WriteLine("types match?!")
+                                                                                                        Console.WriteLine(tVal.GetType())
+                                                                                                        symbolTable <- symbolTable.Remove(name)
+                                                                                                        symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                                                                    else
+                                                                                                        Console.WriteLine(t.Head.GetType())
+                                                                                                        Console.WriteLine(tVal.GetType())
+                                                                                                    (tList, tVal)
+                                                                            | _ -> raise parseError
+                                                                            
+                                                                            
         | Var name :: Assign :: tail -> let tVal = snd (E tail)
                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
                                         (tail, tVal)
@@ -502,28 +520,37 @@ let parseNeval tList =
         | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
                                                                        raise undefinedVarError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
+        | For :: Lpar :: Num (Int count) :: Rpar :: Lbrace :: tail ->   for i = 1 to (count-1) do
+                                                                            Console.WriteLine(tail)
+                                                                            Console.WriteLine(E tail)
+                                                                        let(tLst, tval) = E tail
+                                                                        match tLst with
+                                                                        | Rbrace :: tail -> (tail, tval)
+                                                                        | _ ->  printTList tLst |> ignore
+                                                                                raise unclosedBracesError                                                             
+
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
-                          | Rpar :: tail -> (tail, tval)
-                          | _ -> raise unclosedBracketsError                                                             
+                          | Rpar :: tail -> (tList, tval)
+                          | _ -> raise unclosedParensError                                                             
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
 
     and FN (name, tail:terminal list) =
-        let (bType, pList, tList) = symbolTable.[name]
-        match bType with
-        | Variable ->   match tList.Head with
-                        | Num value -> (tList, value)
+        let (b, p, t) = symbolTable.[name]
+        match b with
+        | Variable ->   match t.Head with
+                        | Num value -> (tail, value)
                         | _ -> raise NaNError
         | Function ->   match tail.Head with
                         | Lpar   -> let (paramsToSub, tailEnd) = getP tail.Tail
-                                    let substitutedTList = subP (paramsToSub, pList, tList)
+                                    let substitutedTList = subP (paramsToSub, p, t)
                                                                                             
                                     let (fTail, fTVal) = E substitutedTList
                                     (tailEnd, fTVal)
                                                                                
-                        | _      -> Console.WriteLine(tList.Head);
+                        | _      -> Console.WriteLine(t.Head);
                                     Console.ReadLine() |> ignore
                                     raise parseError
 
@@ -645,6 +672,4 @@ let rec main' argv  =
            main' argv |> ignore
            0
 
-    
-    
-    
+//| for :: Lpar :: Int :: Rpar :: Lbrace :: body :: Rbrace
