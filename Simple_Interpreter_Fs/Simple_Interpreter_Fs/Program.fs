@@ -594,16 +594,14 @@ let parseNeval tList =
                                                                         match tLst with
                                                                         | Rbrace :: tail -> (tail, tval)
                                                                         | _ ->  printTList tLst |> ignore
-                                                                                raise unclosedBracesError                                                             
-
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------                                       
-        //| Typ Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
-        //                                               if tVal.GetType() = (Bool 0y).GetType() then
-        //                                                 symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-        //                                                 (tLst, tVal)
-        //                                               else
-        //                                                 Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
-        //                                                 raise typeError 
+                                                                                raise unclosedBracesError                                                                                               
+        | Typ Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
+                                                       if tVal.GetType() = (Bool false).GetType() then
+                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                         (tLst, tVal)
+                                                       else
+                                                         Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
+                                                         raise typeError 
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tList, tval)
