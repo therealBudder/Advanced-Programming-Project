@@ -7,7 +7,8 @@ open System
 
 let rec squareRoot ((inputValue:float), (power:float)) =
    match power with
-   power when power > 1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
+   | power when power > 1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
+   | power when power < -1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power+1.0)
    | _ -> inputValue  
 type BindingType =
     | Variable
@@ -154,16 +155,19 @@ and number =
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (pown upper y, pown lower y)
-                                             | Int y, Frac (upper, lower) ->
-                                                   Int (pown ((int)(squareRoot(float y, float lower))) ((int)upper))
-                                             | Frac (upper, lower), Flt y ->
-                                                   Flt (Math.Pow((float upper/float lower), y))
+                                                   number.Pow(Frac (upper, lower), number.toFraction(Int y)) 
+                                             | Int y, Frac (upper, lower) ->                                      
+                                                   let power = float upper / float lower
+                                                   let result = (Flt (number.fltVal(Int y) ** number.fltVal (Flt power)))
+                                                   result.ToInt()
+                                             | Frac (upper, lower), Flt y -> 
+                                                   number.Pow(Frac (upper, lower), number.toFraction(Flt y)) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   Flt (Math.Pow(squareRoot(y, float lower), float upper))     
+                                                   Flt (number.fltVal (Flt y) ** (float upper/float lower))      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   // Frac ((Math.Pow(squareRoot(upper, lowerTwo), upperTwo)),(Math.Pow(squareRoot(lower, lowerTwo), upperTwo)))
-                                                    number.toFraction(Flt (Math.Pow((float upper / float lower), (float upperTwo / float lowerTwo))))  
+                                                   let upperFloat = ((float upper) ** (float upperTwo/float lowerTwo))
+                                                   let lowerFloat = ((float lower) ** (float upperTwo/float lowerTwo)) 
+                                                   number.toFraction(Flt upperFloat/Flt lowerFloat) 
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
@@ -202,6 +206,7 @@ let floatVal (c:char) = (float)((int)c - (int)'0')
 let strVal (c:char) = (string)c
 let parseError = Exception("Parser error")
 let divisionByZeroError = Exception("Division by zero is undefined")
+let DenominatorisZeroError = Exception("Zero Denominator is undefined")
 let tanUndefinedError = Exception("Tan call will result in undefined behavior.")
 let sinUndefinedError = Exception("Sin call will result in undefined behavior.")
 let cosUndefinedError = Exception("Cos call will result in undefined behavior.")
@@ -486,8 +491,10 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Num (Bool value) :: tail -> (tail, Bool value)
-        | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail -> (tail, Frac (num, denom))
-        | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
+        | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail ->  if denom <> 0 then (tail, Frac (num, denom))
+                                                                                    else raise DenominatorisZeroError                                                                                 
+        | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
+                                                                                                   else raise DenominatorisZeroError 
         | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
