@@ -48,7 +48,7 @@ and number =
         | Int i -> i.ToString()
         | Flt f -> f.ToString()
         | Frac (num,denom) -> num.ToString() + "/" + denom.ToString()
-        | Bool b -> b.ToString()
+        | Bool b -> b.ToString().ToLower()
     member this.TypeToString() =
         match this with
         | Int _ -> "int"
@@ -483,7 +483,11 @@ let parseNeval tList =
     and NR tList =
         match tList with
         | Logical Not :: tail -> let (tLst, tval) = NR tail
-                                 (tLst, tval)
+                                 let notval = match tval with
+                                              | Bool b -> Bool (not b)
+                                              | _ -> Console.WriteLine("NOT operator expected a boolean but got" + tval.TypeToString())
+                                                     raise parseError
+                                 (tLst, notval)
         | Arith Sub :: tail -> let (tLst, tval) = NR tail
                                (tLst, -tval)
         | Arith Add :: tail -> let (tLst, tval) = NR tail
