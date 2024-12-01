@@ -454,11 +454,14 @@ let parseNeval tList =
     and Ropt (tList, value) =
         match tList with
         | Relational Equal :: tail -> let (tLst, tval) = E tail
-                                      Ropt (tLst, tval)
+                                      let isEqual = if number.fltVal(value) = number.fltVal(tval) then Bool true else Bool false
+                                      Ropt (tLst, isEqual)
         | Relational Less :: tail -> let (tLst, tval) = E tail
-                                     Ropt (tLst, tval)
+                                     let isLess = if number.fltVal(value) < number.fltVal(tval) then Bool true else Bool false
+                                     Ropt (tLst, isLess)
         | Relational Greater :: tail -> let (tLst, tval) = E tail
-                                        Ropt (tLst, tval)
+                                        let isGreater = if number.fltVal(value) > number.fltVal(tval) then Bool true else Bool false
+                                        Ropt (tLst, isGreater)
         | _ -> (tList, value)                                
     and E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
