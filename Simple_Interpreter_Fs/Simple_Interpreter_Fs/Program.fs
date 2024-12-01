@@ -33,7 +33,7 @@ type terminal =
     | Null
     | Pi
     | Abs
-    | Typ of typ
+    | DataType of dataType
     | Relational of relational
     | Logical of logical
     
@@ -195,7 +195,7 @@ and relational =
     Equal | Greater | Less
 and logical =
     And | Or | Not
-and typ =
+and dataType =
     Integer | Float | Fraction | Boolean | Auto
 
 //Errors
@@ -285,10 +285,11 @@ let isReservedWord(inString) =
     | "tan" -> Trig Tan
     | "pi" -> Pi
     | "abs" -> Abs
-    | "int" -> Typ Integer
-    | "float" -> Typ Float
-    | "frac" -> Typ Fraction
-    | "var" -> Typ Auto
+    | "int" -> DataType Integer
+    | "float" -> DataType Float
+    | "frac" -> DataType Fraction
+    | "bool" -> DataType Boolean
+    | "var" -> DataType Auto
     | "fn" -> Func
     | "for" -> For
     | "true" -> Num (Bool true)
@@ -432,17 +433,22 @@ let mutable symbolTable = Map.empty
 
 let parseNeval tList =
     let rec L tList = (R >> Lopt) tList
-    and Lopt (tList, value) =
+    and Lopt (tList, value: number) =
         match tList with
         | Logical And :: tail -> let (tLst, tval) = R tail
-                                 // let result = 
-                                 //     match value, tval with
-                                 //     | Bool false, _ -> Bool true
-                                 //     | _ , Bool false -> Bool true
-                                 //     | _ -> Bool true
-                                 Lopt (tLst, tval)
+                                 let andval = 
+                                     match value.ToBool(), tval.ToBool() with
+                                     | Bool false, _ -> Bool false
+                                     | _ , Bool false -> Bool false
+                                     | _ -> Bool true
+                                 Lopt (tLst, andval)
         | Logical Or :: tail -> let (tLst, tval) = R tail
-                                Lopt (tLst, tval)
+                                let orval =
+                                    match value.ToBool(), tval.ToBool() with
+                                    | Bool true, _ -> Bool true
+                                    | _, Bool true -> Bool true
+                                    | _ -> Bool false
+                                Lopt (tLst, orval)
         | _ -> (tList, value)                        
     and R tList = (E >> Ropt) tList
     and Ropt (tList, value) =
@@ -483,9 +489,9 @@ let parseNeval tList =
     and NR tList =
         match tList with
         | Logical Not :: tail -> let (tLst, tval) = NR tail
-                                 let notval = match tval with
+                                 let notval = match tval.ToBool() with
                                               | Bool b -> Bool (not b)
-                                              | _ -> Console.WriteLine("NOT operator expected a boolean but got" + tval.TypeToString())
+                                              | _ -> Console.WriteLine("NOT operator expected a boolean but got " + tval.TypeToString())
                                                      raise parseError
                                  (tLst, notval)
         | Arith Sub :: tail -> let (tLst, tval) = NR tail
@@ -495,10 +501,10 @@ let parseNeval tList =
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Num (Bool value) :: tail -> (tail, Bool value)
-        | Typ Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail ->  if denom <> 0 then (tail, Frac (num, denom))
-                                                                                    else raise DenominatorisZeroError                                                                                 
-        | Typ Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
-                                                                                                   else raise DenominatorisZeroError 
+        | DataType Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail ->  if denom <> 0 then (tail, Frac (num, denom))
+                                                                                         else raise DenominatorisZeroError                                                                                 
+        | DataType Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
+                                                                                                        else raise DenominatorisZeroError 
         | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let (tLst, tval) = NR tail
                          (tLst, number.Abs(tval))
@@ -559,30 +565,30 @@ let parseNeval tList =
         | Var name :: Assign :: tail -> let tval = snd (E tail)
                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                         (tail, tval)
-        | Typ Auto :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
-                                                    symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                    (tList, tval)
-        | Typ Integer :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
-                                                       if tval.GetType() = (Int 0).GetType() then
-                                                           symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                           (tLst, tval)
-                                                       else
-                                                           Console.WriteLine("Value "+ tval.ToString() + " not an integer")
-                                                           raise typeError
-        | Typ Float :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
-                                                     if tval.GetType() = (Flt 0.0).GetType() then
-                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                          (tLst, tval)
-                                                     else
-                                                         Console.WriteLine("Value " + tval.ToString() + " not a float")
-                                                         raise typeError
-        | Typ Fraction :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
-                                                        if tval.GetType() = (Frac (0,1)).GetType() then
-                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                          (tLst, tval)
-                                                        else
-                                                          Console.WriteLine("Value " + tval.ToString() + " not an fraction number")
-                                                          raise typeError
+        | DataType Auto :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                                         (tList, tval)
+        | DataType Integer :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+                                                            if tval.GetType() = (Int 0).GetType() then
+                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                                                (tLst, tval)
+                                                            else
+                                                                Console.WriteLine("Value "+ tval.ToString() + " not an integer")
+                                                                raise typeError
+        | DataType Float :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+                                                          if tval.GetType() = (Flt 0.0).GetType() then
+                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                                               (tLst, tval)
+                                                          else
+                                                              Console.WriteLine("Value " + tval.ToString() + " not a float")
+                                                              raise typeError
+        | DataType Fraction :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+                                                             if tval.GetType() = (Frac (0,1)).GetType() then
+                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                                               (tLst, tval)
+                                                             else
+                                                               Console.WriteLine("Value " + tval.ToString() + " not an fraction number")
+                                                               raise typeError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Func :: Var name :: Lpar :: tail when symbolTable.ContainsKey(name) ->    let (paramList, tList) = getPSignature ([], tail)
                                                                                     symbolTable <- symbolTable.Remove(name)
@@ -595,7 +601,7 @@ let parseNeval tList =
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
 
-        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function" + name)
+        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function " + name)
                                                                        raise undefinedVarError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | For :: Lpar :: Num (Int count) :: Rpar :: Lbrace :: tail ->   for i = 1 to (count-1) do
@@ -606,13 +612,13 @@ let parseNeval tList =
                                                                         | Rbrace :: tail -> (tail, tval)
                                                                         | _ ->  printTList tLst |> ignore
                                                                                 raise unclosedBracesError                                                                                               
-        | Typ Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
-                                                       if tVal.GetType() = (Bool false).GetType() then
-                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-                                                         (tLst, tVal)
-                                                       else
-                                                         Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
-                                                         raise typeError 
+        | DataType Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
+                                                            if tVal.GetType() = (Bool false).GetType() then
+                                                              symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
+                                                              (tLst, tVal)
+                                                            else
+                                                              Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
+                                                              raise typeError 
         | Lpar :: tail -> let (tList, tval) = E tail
                           match tList with 
                           | Rpar :: tail -> (tList, tval)
