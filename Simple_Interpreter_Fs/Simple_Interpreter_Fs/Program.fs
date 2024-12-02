@@ -16,6 +16,7 @@ type BindingType =
 type terminal = 
     | Func
     | For
+    | While
     | Rem
     | Pow
     | Exp
@@ -293,6 +294,7 @@ let isReservedWord(inString) =
     | "var" -> DataType Auto
     | "fn" -> Func
     | "for" -> For
+    | "while" -> While
     | "true" -> Num (Bool true)
     | "false" -> Num (Bool false)
     | _ -> Null
@@ -372,8 +374,18 @@ let getInputString() : string =
 // <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <trig> <F> | <log> <F> | "Exp" <F> |<empty> 
 // <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | <number> <value> | "(" <E> ")"
 
-
-
+// version 2.0
+// <L>        ::= <R> <Lopt>
+// <Lopt>     ::= "!" <R> <Lopt> | "&&" <R> <Lopt> | "||" <R> <Lopt>
+// <R>        ::= <E> <Ropt>
+// <Ropt>     ::= "==" <E> <Ropt> | "<" <E> <Ropt> | ">" <E> <Ropt>
+// <E>        ::= <T> <Eopt>
+// <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
+// <T>        ::= <F> <Topt>
+// <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> |  "%" <F> <Topt> | <empty>
+// <F>        ::= <NR> <Fopt>
+// <Fopt>     ::= "^" <NR> <Fopt> | "-" <NR> | <trig> <F> | <log> <F> | "Exp" <F> |<empty>
+// <NR>       ::= "Var" <value> "Assign" <NR> | "Var" <value> | <number> <value> | "(" <E> ")"
 
 let parser tList =
     let rec L tList = (R >> Lopt) tList
@@ -432,8 +444,8 @@ let parser tList =
 //let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
 let mutable symbolTable = Map.empty
 
-let parseNeval tList =
-    let rec L tList = (R >> Lopt) tList
+let parseNeval tList =                         //Because L=R, then R=E and so on, tList executes from bottom to top (NR -> Fopt -> Topt -> Eopt -> Ropt -> Lopt)
+    let rec L tList = (R >> Lopt) tList         
     and Lopt (tList, value: number) =
         match tList with
         | Logical And :: tail -> let (tLst, tval) = R tail
@@ -450,7 +462,7 @@ let parseNeval tList =
                                     | _, Bool true -> Bool true
                                     | _ -> Bool false
                                 Lopt (tLst, orval)
-        | _ -> (tList, value)                        
+        | _ -> (tList, value)       //<Lopt>     ::= "&&" <R> <Lopt> | "||" <R> <Lopt> | <empty>       //("!" <R> <Lopt>) moved to NR -> not symbol must execute first
     and R tList = (E >> Ropt) tList
     and Ropt (tList, value) =
         match tList with
@@ -463,7 +475,7 @@ let parseNeval tList =
         | Relational Greater :: tail -> let (tLst, tval) = E tail
                                         let isGreater = if number.fltVal(value) > number.fltVal(tval) then Bool true else Bool false
                                         Ropt (tLst, isGreater)
-        | _ -> (tList, value)                                
+        | _ -> (tList, value)               // <Ropt>     ::= "==" <E> <Ropt> | "<" <E> <Ropt> | ">" <E> <Ropt> | <empty>          
     and E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
         match tList with
@@ -471,7 +483,7 @@ let parseNeval tList =
                                Eopt (tLst, value + tval)
         | Arith Sub :: tail -> let (tLst, tval) = T tail
                                Eopt (tLst, value - tval)
-        | _ -> (tList, value)
+        | _ -> (tList, value)              // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
     and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
@@ -483,15 +495,21 @@ let parseNeval tList =
                                   if tval = Int 0 || tval = Flt 0.0 then raise divisionByZeroError else Topt (tLst, number.Floor(value / tval))
         | Rem :: tail -> let (tLst, tval) = F tail
                          Topt (tLst, value % tval)                  
-        | _ -> (tList, value)
-    and F tList = (NR >> Fopt) tList
+        | _ -> (tList, value)               // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> | "//" <F> <Topt> | "%" <F> <Topt> | <empty>
+    and F tList = (NR >> Fopt) tList           
     and Fopt (tList, value) =
         match tList with
         | Pow :: tail -> let (tLst, tval) = NR tail
                          Fopt (tLst, number.Pow(value, tval))
-        | _ -> (tList, value)
+        | _ -> (tList, value)               // <Fopt>     ::= "^" <NR> <Fopt> | <empty>         //("-" <NR> | <trig> <F> | <log> <F> | "Exp" <F>) moved to NR as must be evaluated first 
     and NR tList =
-        match tList with
+        // <NR> :=  "!" <NR> |
+        //          "-" <NR> | "+" <NR> |
+        //          <int> <value> | <flt> <value> | <bool> <value> |
+        //          HOW DO YOU DO FRACTIONS !!!! |
+        //          "(" <int> <value> "/" <int> <value> ")"
+
+        match tList with           
         | Logical Not :: tail -> let (tLst, tval) = NR tail
                                  let notval = match tval.ToBool() with
                                               | Bool b -> Bool (not b)
@@ -634,7 +652,7 @@ let parseNeval tList =
                           | _ -> raise unclosedParensError                                                             
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
-               raise parseError
+               raise parseError                          
 
     and FN (name, tail:terminal list) =
         let (b, p, t) = symbolTable.[name]
@@ -695,6 +713,7 @@ let parseNeval tList =
                                         raise unmatchedParamError
             | head :: tail -> head :: scan tail
         scan inTList
+
     L tList
 
 
