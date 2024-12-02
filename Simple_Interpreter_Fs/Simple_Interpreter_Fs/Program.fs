@@ -220,6 +220,7 @@ let unmatchedParamError = Exception("Syntax error Function body contains paramet
 let NaNError = Exception("Syntax error SymbolTable entry of BindingType Variable contains non-Num value in token list")
 let bindingTypeError = Exception("Syntax error BindingType in table is undefined")
 let funcAsParamError = Exception("Syntax error Functions not yet supported as functions")
+let countLessThanOneException = Exception("Syntax error Cannot iterate expression for less than 1 iteration")
 
 //Functions
 let str2lst s = [for c in s -> c]
@@ -607,14 +608,19 @@ let parseNeval tList =
         | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function " + name)
                                                                        raise undefinedVarError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | For :: Lpar :: Num (Int count) :: Rpar :: Lbrace :: tail ->   for i = 1 to (count-1) do
-                                                                            Console.WriteLine(tail)
-                                                                            Console.WriteLine(E tail)
-                                                                        let(tLst, tval) = E tail
-                                                                        match tLst with
-                                                                        | Rbrace :: tail -> (tail, tval)
-                                                                        | _ ->  printTList tLst |> ignore
-                                                                                raise unclosedBracesError                                                                                               
+        | For :: Lpar :: Num (Int count) :: Rpar :: Lbrace :: tail ->   if count < 1 then
+                                                                            raise countLessThanOneException
+                                                                        else
+                                                                            for i = 1 to (count-1) do
+                                                                                Console.WriteLine(tail)
+                                                                                Console.WriteLine(E tail)
+                                                                            let(tLst, tval) = E tail
+                                                                            match tLst with
+                                                                            | Rbrace :: tail -> (tail, tval)
+                                                                            | _ ->  printTList tLst |> ignore
+                                                                                    raise unclosedBracesError                            
+        | For :: Lpar :: Arith Sub :: Num (Int count) :: tail -> raise countLessThanOneException
+        
         | DataType Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
                                                             if tVal.GetType() = (Bool false).GetType() then
                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
