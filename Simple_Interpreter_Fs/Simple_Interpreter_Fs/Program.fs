@@ -563,7 +563,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                         (tail, tval)
         | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                         (tList, tval)
+                                                         (tLst, tval)
         | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                             if tval.GetType() = (Int 0).GetType() then
                                                                 symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
