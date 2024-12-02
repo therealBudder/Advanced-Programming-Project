@@ -394,12 +394,14 @@ let parser tList =
         | Logical Not :: tail -> (R >> Lopt) tail
         | Logical Or :: tail -> (R >> Lopt) tail
         | Logical And :: tail -> (R >> Lopt) tail
+        | _ -> tList
     and R tList = (E >> Ropt) tList
     and Ropt tList =
         match tList with
         | Relational Equal :: tail -> (E >> Ropt) tail
         | Relational Less :: tail -> (E >> Ropt) tail
         | Relational Greater :: tail -> (E >> Ropt) tail
+        | _ -> tList
     and E tList = (T >> Eopt) tList         // >> is forward function composition operator: let inline (>>) f g x = g(f x)
     and Eopt tList = 
         match tList with
@@ -440,7 +442,7 @@ let parser tList =
                           | Rpar :: tail -> tail
                           | _ -> raise unclosedParensError
         | _ -> raise parseError
-    E tList
+    L tList
 
 //let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
 let mutable symbolTable = Map.empty
@@ -590,7 +592,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                         (tail, tval)
         | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                         (tList, tval)
+                                                         (tLst, tval)
         | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                             if tval.GetType() = (Int 0).GetType() then
                                                                 symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
