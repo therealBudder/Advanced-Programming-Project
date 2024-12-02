@@ -1,15 +1,9 @@
-﻿// Simple Interpreter in F#
+﻿open System
+// Simple Interpreter in F#
 // Author: R.J. Lapeer 
 // Date: 23/10/2022
 // Reference: Peter Sestoft, Grammars and parsing with F#, Tech. Report
-
-open System
-
-let rec squareRoot ((inputValue:float), (power:float)) =
-   match power with
-   | power when power > 1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power-1.0)
-   | power when power < -1.0 = true -> squareRoot ((Math.Sqrt(inputValue)), power+1.0)
-   | _ -> inputValue  
+ 
 type BindingType =
     | Variable
     | Function
@@ -26,7 +20,7 @@ type terminal =
     | Lbrace
     | Rbrace
     | Neg
-    | Arith of arith
+    | Arith of arithmetic
     | Num of number
     | Var of string
     | Assign
@@ -80,7 +74,7 @@ and number =
         | Frac (num,denom) -> if num = 0 then Bool false else Bool true
         | Bool b -> Bool b
     static member toFraction(inputIn) =
-     let (num, denom) = number.toFractionHelp(inputIn, Int 1)
+     let num, denom = number.toFractionHelp(inputIn, Int 1)
      Frac (number.intVal(num),number.intVal(denom))
      
     static member toFractionHelp(num, denom) =
@@ -91,52 +85,52 @@ and number =
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
-                                                   (number.toFraction(Int y)) + Frac (upper, lower)
+                                                   number.toFraction(Int y) + Frac (upper, lower)
                                                | Int y, Frac (upper, lower) ->
-                                                   (number.toFraction(Int y)) + Frac (upper, lower)   
+                                                   number.toFraction(Int y) + Frac (upper, lower)   
                                                | Frac (upper, lower), Flt y ->
-                                                   (number.toFraction(Flt y)) + Frac (upper, lower)
+                                                   number.toFraction(Flt y) + Frac (upper, lower)
                                                | Flt y, Frac (upper, lower) ->
-                                                   (number.toFraction(Flt y)) + Frac (upper, lower)   
+                                                   number.toFraction(Flt y) + Frac (upper, lower)   
                                                | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower) - (number.toFraction(Int y)) 
+                                                   Frac (upper, lower) - number.toFraction(Int y) 
                                              | Int y, Frac (upper, lower) ->
-                                                   (number.toFraction(Int y)) - Frac (upper, lower)      
+                                                   number.toFraction(Int y) - Frac (upper, lower)      
                                              | Frac (upper, lower), Flt y ->
-                                                   Frac (upper, lower) - (number.toFraction(Flt y)) 
+                                                   Frac (upper, lower) - number.toFraction(Flt y) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   (number.toFraction(Flt y)) - Frac (upper, lower)
+                                                   number.toFraction(Flt y) - Frac (upper, lower)
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
                                              | Frac (upper, lower), Int y ->
-                                                   (number.toFraction(Int y)) * Frac (upper, lower)
+                                                   number.toFraction(Int y) * Frac (upper, lower)
                                              | Int y, Frac (upper, lower) ->
-                                                   (number.toFraction(Int y)) * Frac (upper, lower)     
+                                                   number.toFraction(Int y) * Frac (upper, lower)     
                                              | Frac (upper, lower), Flt y ->
-                                                   (number.toFraction(Flt y)) * Frac (upper, lower)
+                                                   number.toFraction(Flt y) * Frac (upper, lower)
                                              | Flt y, Frac (upper, lower) ->
-                                                   (number.toFraction(Flt y)) * Frac (upper, lower)      
+                                                   number.toFraction(Flt y) * Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * upperTwo, lower * lowerTwo) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower) / (number.toFraction(Int y)) 
+                                                   Frac (upper, lower) / number.toFraction(Int y) 
                                              | Int y, Frac (upper, lower) ->
-                                                   (number.toFraction(Int y)) / Frac (upper, lower)    
+                                                   number.toFraction(Int y) / Frac (upper, lower)    
                                              | Frac (upper, lower), Flt y ->
-                                                   Frac (upper, lower) / (number.toFraction(Flt y)) 
+                                                   Frac (upper, lower) / number.toFraction(Flt y) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   (number.toFraction(Flt y)) / Frac (upper, lower)      
+                                                   number.toFraction(Flt y) / Frac (upper, lower)      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    Frac (upper * lowerTwo, lower * upperTwo) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
@@ -188,7 +182,7 @@ and number =
                                    | Frac (upper, lower) -> number.toFraction(Flt (float (Math.Abs(upper/lower))))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
-and arith =
+and arithmetic =
     Add | Sub | Mul | Div | FlrDiv
 and log =
     LogN | LogOther
@@ -202,9 +196,9 @@ and dataType =
 //Errors
 let lexError = Exception("invalid symbol in expression")
 let varError = Exception("incorrect var assignment")
-let intVal (c:char) = (int)((int)c - (int)'0')
-let floatVal (c:char) = (float)((int)c - (int)'0')
-let strVal (c:char) = (string)c
+let intVal (c:char) = int(int c - int '0')
+let floatVal (c:char) = float(int c - int '0')
+let strVal (c:char) = string c
 let parseError = Exception("Parser error")
 let divisionByZeroError = Exception("Division by zero is undefined")
 let DenominatorisZeroError = Exception("Zero Denominator is undefined")
@@ -245,7 +239,7 @@ let checkPositive (x:float) =
 let checkLogEdgeCase (newBase:float) =
     if (newBase = 1.0) then true else false  
 let checkBetweenATrigValues(x:float) =
-    let out = fun input -> (input >= -(1.0) && input <= (1.0))
+    let out = fun input -> (input >= -(1.0) && input <= 1.0)
     out x 
 let rec scInt(iStr, iVal) =
     match iStr with
@@ -257,25 +251,7 @@ and scFloat(iStr, iVal, weight) =
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
     | _ -> (iStr, iVal)    
 
-// and scRad(iVal, iValString, iVal1, iVal1String, iVal2String, weight, iStr) =
-//     let upper = match iValString with
-//                 c :: tail when isdigit c ->
-//                   scFloat(iValString.Tail, iVal + weight * floatVal c, weight / 10.0)
-//                 | _ -> (iValString, iVal)            
-//     let lowerPre = match iVal1String with
-//                    c :: tail when isdigit c -> scInt(tail, 10*iVal1+(intVal c))
-//                    | _ -> (iVal1String, iVal1)
-//     let lower = match iVal2String with
-//                    c :: tail when isdigit c ->
-//                    scFloat(iVal2String.Tail, (float) (snd lowerPre) + weight * floatVal c, weight / 10.0)
-//                    | _ -> (iVal2String, float iVal1)
-//     let rec burnIStr inCharList =
-//         match inCharList with
-//         | c :: tail when isblank c = false -> burnIStr(inCharList.Tail)
-//         | _ -> (inCharList)
-//     (upper, lower, (burnIStr iStr))               
-
-let isReservedWord(inString) =
+let isReservedWord inString =
     match inString with
     | "ln"  -> Log LogN
     | "log" -> Log LogOther
@@ -301,13 +277,13 @@ let isReservedWord(inString) =
 
 let rec scName(remain : list<char>, word : string) =
     match remain with
-    c :: tail when isletterordigit c -> let cStr = (string)c
+    c :: tail when isletterordigit c -> let cStr =  string c
                                         scName(tail, word + cStr)
     | _ -> (remain, word)
 let getFloatRadian value =
      number.fltVal(value) * (Math.PI / 180.0)
 let getFloatDegrees value =
-    (value) * (180.0/Math.PI)     
+    value * (180.0/Math.PI)     
 let getListPart(valueEnd, listIn) =     
     listIn |> List.take (listIn |> List.tryFindIndex (fun elem -> elem = valueEnd)).Value 
 let lexer input = 
@@ -334,20 +310,17 @@ let lexer input =
         | '}'::tail -> Rbrace:: scan tail
         | '='::tail -> Assign:: scan tail
         | c :: tail when isblank c -> scan tail
-        | c :: tail when isdigit c -> let (iStr, iVal) = scInt(tail, intVal c)
+        | c :: tail when isdigit c -> let iStr, iVal = scInt(tail, intVal c)
                                       match iStr with
-                                      // | '.' :: c :: '/' :: cNext :: '.' :: CNextAfter :: tail when isdigit c -> let (iVal, iVal2, iStr) = scRad(float iVal, (getListPart('/',iStr).Tail), intVal cNext ,(getListPart('.',iStr)),CNextAfter::tail,0.1, iStr)
-                                      //                                                                           Num (Frac (snd iVal,snd iVal2)) :: scan iStr 
-                                      | '.' :: c :: tail when isdigit c -> let (iStr, iVal) = scFloat(c :: tail, (float)iVal, 0.1)
+                                      | '.' :: c :: tail when isdigit c -> let iStr, iVal = scFloat(c :: tail, float iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
                                       
                                       | _ -> Num (Int iVal) :: scan iStr
-                                      // Num iVal :: scan iStr
-        | c :: tail when isletter c -> let (iStr, oStr) = scName(tail, (string)c)
+        | c :: tail when isletter c -> let iStr, oStr = scName(tail, string c)
                                        let result = isReservedWord oStr
                                        if result <> Null then result :: scan iStr else Var oStr :: scan iStr
                                        
-        | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
+        | _ -> Console.WriteLine("Unexpected symbol '" + input[0].ToString() + "'")
                raise lexError
     scan (str2lst input)
 
@@ -422,10 +395,11 @@ let parser tList =
     and NR tList =
         match tList with
         | Arith Sub :: tail -> tail
-        | Num (Int value) :: tail -> tail
-        | Num (Flt value) :: tail -> tail
-        | Num (Frac (num,denom)) :: tail -> tail
-        | Num (Bool value) :: tail -> tail
+        //| Num (Int value) :: tail -> tail
+        | Num number :: tail -> tail
+        // | Num (Flt value) :: tail -> tail
+        // | Num (Frac (num,denom)) :: tail -> tail
+        // | Num (Bool value) :: tail -> tail
         | Exp :: tail -> (NR >> Fopt) tail
         | Log LogN :: tail -> (NR >> Fopt) tail
         | Log LogOther :: tail -> (NR >> Fopt) tail
@@ -448,14 +422,14 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     let rec L tList = (R >> Lopt) tList         
     and Lopt (tList, value: number) =
         match tList with
-        | Logical And :: tail -> let (tLst, tval) = R tail
+        | Logical And :: tail -> let tLst, tval = R tail
                                  let andval = 
                                      match value.ToBool(), tval.ToBool() with
                                      | Bool false, _ -> Bool false
                                      | _ , Bool false -> Bool false
                                      | _ -> Bool true
                                  Lopt (tLst, andval)
-        | Logical Or :: tail -> let (tLst, tval) = R tail
+        | Logical Or :: tail -> let tLst, tval = R tail
                                 let orval =
                                     match value.ToBool(), tval.ToBool() with
                                     | Bool true, _ -> Bool true
@@ -466,40 +440,40 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     and R tList = (E >> Ropt) tList
     and Ropt (tList, value) =
         match tList with
-        | Relational Equal :: tail -> let (tLst, tval) = E tail
+        | Relational Equal :: tail -> let tLst, tval = E tail
                                       let isEqual = if number.fltVal(value) = number.fltVal(tval) then Bool true else Bool false
                                       Ropt (tLst, isEqual)
-        | Relational Less :: tail -> let (tLst, tval) = E tail
+        | Relational Less :: tail -> let tLst, tval = E tail
                                      let isLess = if number.fltVal(value) < number.fltVal(tval) then Bool true else Bool false
                                      Ropt (tLst, isLess)
-        | Relational Greater :: tail -> let (tLst, tval) = E tail
+        | Relational Greater :: tail -> let tLst, tval = E tail
                                         let isGreater = if number.fltVal(value) > number.fltVal(tval) then Bool true else Bool false
                                         Ropt (tLst, isGreater)
         | _ -> (tList, value)               // <Ropt>     ::= "==" <E> <Ropt> | "<" <E> <Ropt> | ">" <E> <Ropt> | <empty>          
     and E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
         match tList with
-        | Arith Add :: tail -> let (tLst, tval) = T tail 
+        | Arith Add :: tail -> let tLst, tval = T tail 
                                Eopt (tLst, value + tval)
-        | Arith Sub :: tail -> let (tLst, tval) = T tail
+        | Arith Sub :: tail -> let tLst, tval = T tail
                                Eopt (tLst, value - tval)
         | _ -> (tList, value)              // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
     and T tList = (F >> Topt) tList
     and Topt (tList, value) =
         match tList with
-        | Arith Mul :: tail -> let (tLst, tval) = F tail
+        | Arith Mul :: tail -> let tLst, tval = F tail
                                Topt (tLst, value * tval)
-        | Arith Div :: tail -> let (tLst, tval) = F tail
+        | Arith Div :: tail -> let tLst, tval = F tail
                                if tval = Int 0 || tval = Flt 0.0 then raise divisionByZeroError else Topt (tLst, value / tval)
-        | Arith FlrDiv :: tail -> let (tLst, tval) = F tail
+        | Arith FlrDiv :: tail -> let tLst, tval = F tail
                                   if tval = Int 0 || tval = Flt 0.0 then raise divisionByZeroError else Topt (tLst, number.Floor(value / tval))
-        | Rem :: tail -> let (tLst, tval) = F tail
+        | Rem :: tail -> let tLst, tval = F tail
                          Topt (tLst, value % tval)                  
         | _ -> (tList, value)               // <Topt>     ::= "*" <F> <Topt> | "/" <F> <Topt> | "//" <F> <Topt> | "%" <F> <Topt> | <empty>
     and F tList = (NR >> Fopt) tList           
     and Fopt (tList, value) =
         match tList with
-        | Pow :: tail -> let (tLst, tval) = NR tail
+        | Pow :: tail -> let tLst, tval = NR tail
                          Fopt (tLst, number.Pow(value, tval))
         | _ -> (tList, value)               // <Fopt>     ::= "^" <NR> <Fopt> | <empty>         //("-" <NR> | <trig> <F> | <log> <F> | "Exp" <F>) moved to NR as must be evaluated first 
     and NR tList =
@@ -510,15 +484,15 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         //          "(" <int> <value> "/" <int> <value> ")"
 
         match tList with           
-        | Logical Not :: tail -> let (tLst, tval) = NR tail
+        | Logical Not :: tail -> let tLst, tval = NR tail
                                  let notval = match tval.ToBool() with
                                               | Bool b -> Bool (not b)
                                               | _ -> Console.WriteLine("NOT operator expected a boolean but got " + tval.TypeToString())
                                                      raise parseError
                                  (tLst, notval)
-        | Arith Sub :: tail -> let (tLst, tval) = NR tail
+        | Arith Sub :: tail -> let tLst, tval = NR tail
                                (tLst, -tval)
-        | Arith Add :: tail -> let (tLst, tval) = NR tail
+        | Arith Add :: tail -> let tLst, tval = NR tail
                                (tLst, +tval)
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
@@ -528,44 +502,44 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | DataType Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
                                                                                                         else raise DenominatorisZeroError 
         | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
-        | Abs :: tail -> let (tLst, tval) = NR tail
+        | Abs :: tail -> let tLst, tval = NR tail
                          (tLst, number.Abs(tval))
-        | Log LogN :: tail -> let (tLst, tval) = NR tail
+        | Log LogN :: tail -> let tLst, tval = NR tail
                               if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
                               else raise logInputError                  
-        | Log LogOther :: tail -> let (tLst, tval) = NR tail
+        | Log LogOther :: tail -> let tLst, tval = NR tail
                                   if checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))
                                   then (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
                                   else raise logInputError
-        | Exp :: tail -> let (tLst, tval) = NR tail
+        | Exp :: tail -> let tLst, tval = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
-        | Trig Sin :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Sin(getFloatRadian tval)), 10) = 0.0 then
+        | Trig Sin :: tail -> let tLst, tval = NR tail
+                              if Math.Round(Math.Sin(getFloatRadian tval), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt ((Math.Sin(getFloatRadian tval))))
-        | Trig Cos :: tail -> let (tLst, tval) = NR tail
-                              if Math.Round((Math.Cos(getFloatRadian tval)), 10) = 0.0 then
+                              else (tLst, Flt (Math.Sin(getFloatRadian tval)))
+        | Trig Cos :: tail -> let tLst, tval = NR tail
+                              if Math.Round(Math.Cos(getFloatRadian tval), 10) = 0.0 then
                                 (tLst, Flt 0.0) 
-                              else (tLst, Flt ((Math.Cos(getFloatRadian tval))))                                
-        | Trig Tan :: tail -> let (tLst, tval) = NR tail
+                              else (tLst, Flt (Math.Cos(getFloatRadian tval)))                                
+        | Trig Tan :: tail -> let tLst, tval = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
-                                if Math.Round((Math.Tan(getFloatRadian tval)), 10) = 0.0 then
+                                if Math.Round(Math.Tan(getFloatRadian tval), 10) = 0.0 then
                                   (tLst, Flt 0.0) 
                                 else (tLst, Flt (Math.Tan(getFloatRadian tval)))
                               else raise tanUndefinedError
-        | Trig ASin :: tail -> let (tLst, tval) = NR tail
+        | Trig ASin :: tail -> let tLst, tval = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round ((Math.Asin(getFloatRadian tval)), 10) = 0.0 then
+                                if Math.Round (Math.Asin(getFloatRadian tval), 10) = 0.0 then
                                  (tLst, Flt 0.0)
                                 else (tLst, Flt (Math.Asin(getFloatRadian tval)))
                                else raise sinUndefinedError
-        | Trig ACos :: tail -> let (tLst, tval) = NR tail
+        | Trig ACos :: tail -> let tLst, tval = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round((Math.Acos(getFloatRadian tval)), 10) = 0.0 then
+                                if Math.Round(Math.Acos(getFloatRadian tval), 10) = 0.0 then
                                  (tLst, Flt 0.0)  
                                 else (tLst, Flt (Math.Acos(getFloatRadian tval)))
                                else raise cosUndefinedError 
-        | Trig ATan :: tail -> let (tLst, tval) = NR tail
+        | Trig ATan :: tail -> let tLst, tval = NR tail
                                if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
                                  (tLst, Flt 0.0)  
                                else (tLst, Flt (Math.Atan(getFloatRadian tval)))
@@ -573,8 +547,8 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let (tLst, tval) = E tail
-                                                                            let (b_type, pList, tList: terminal list) = symbolTable.[name]
+        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tLst, tval = E tail
+                                                                            let (b_type, pList, tList: terminal list) = symbolTable[name]
                                                                             Console.WriteLine(tList.Head.toNumber().GetType())
                                                                             Console.WriteLine(tval.GetType())
                                                                             if (tList.Head.toNumber().GetType() = tval.GetType()) && (b_type = Variable) then
@@ -587,24 +561,24 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Var name :: Assign :: tail -> let tval = snd (E tail)
                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                         (tail, tval)
-        | DataType Auto :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+        | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                                          (tList, tval)
-        | DataType Integer :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+        | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                             if tval.GetType() = (Int 0).GetType() then
                                                                 symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                                                 (tLst, tval)
                                                             else
                                                                 Console.WriteLine("Value "+ tval.ToString() + " not an integer")
                                                                 raise typeError
-        | DataType Float :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+        | DataType Float :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                           if tval.GetType() = (Flt 0.0).GetType() then
                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                                                (tLst, tval)
                                                           else
                                                               Console.WriteLine("Value " + tval.ToString() + " not a float")
                                                               raise typeError
-        | DataType Fraction :: Var name :: Assign :: tail -> let (tLst,tval) = E tail
+        | DataType Fraction :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                              if tval.GetType() = (Frac (0,1)).GetType() then
                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                                                (tLst, tval)
@@ -612,14 +586,14 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                Console.WriteLine("Value " + tval.ToString() + " not an fraction number")
                                                                raise typeError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Func :: Var name :: Lpar :: tail when symbolTable.ContainsKey(name) ->    let (paramList, tList) = getPSignature ([], tail)
+        | Func :: Var name :: Lpar :: tail when symbolTable.ContainsKey(name) ->    let paramList, tList = getPSignature ([], tail)
                                                                                     symbolTable <- symbolTable.Remove(name)
                                                                                     symbolTable <- symbolTable.Add(name, (Function, paramList, tList))                                                                        
-                                                                                    (tList, (Int)0)
-        | Func :: Var name :: Lpar ::tail ->    let (paramList, tList) = getPSignature ([], tail)
+                                                                                    (tList, Int 0)
+        | Func :: Var name :: Lpar ::tail ->    let paramList, tList = getPSignature ([], tail)
                                                 symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
 
-                                                (tList, (Int)0)
+                                                (tList, Int 0)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
 
@@ -632,21 +606,21 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                             for i = 1 to (count-1) do
                                                                                 Console.WriteLine(tail)
                                                                                 Console.WriteLine(E tail)
-                                                                            let(tLst, tval) = E tail
+                                                                            let tLst, tval = E tail
                                                                             match tLst with
                                                                             | Rbrace :: tail -> (tail, tval)
                                                                             | _ ->  printTList tLst |> ignore
                                                                                     raise unclosedBracesError                            
         | For :: Lpar :: Arith Sub :: Num (Int count) :: tail -> raise countLessThanOneException
         
-        | DataType Boolean :: Var name :: Assign :: tail -> let (tLst,tVal) = E tail
+        | DataType Boolean :: Var name :: Assign :: tail -> let tLst,tVal = E tail
                                                             if tVal.GetType() = (Bool false).GetType() then
                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
                                                               (tLst, tVal)
                                                             else
                                                               Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
                                                               raise typeError 
-        | Lpar :: tail -> let (tList, tval) = E tail
+        | Lpar :: tail -> let tList, tval = E tail
                           match tList with 
                           | Rpar :: tail -> (tList, tval)
                           | _ -> raise unclosedParensError                                                             
@@ -655,16 +629,16 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                raise parseError                          
 
     and FN (name, tail:terminal list) =
-        let (b, p, t) = symbolTable.[name]
+        let b, p, t = symbolTable[name]
         match b with
         | Variable ->   match t.Head with
                         | Num value -> (tail, value)
                         | _ -> raise NaNError
         | Function ->   match tail.Head with
-                        | Lpar   -> let (paramsToSub, tailEnd) = getP tail.Tail
+                        | Lpar   -> let paramsToSub, tailEnd = getP tail.Tail
                                     let substitutedTList = subP (paramsToSub, p, t)
                                                                                             
-                                    let (fTail, fTVal) = E substitutedTList
+                                    let fTail, fTVal = E substitutedTList
                                     (tailEnd, fTVal)
                                                                                
                         | _      -> Console.WriteLine(t.Head);
@@ -681,10 +655,10 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     and getP inTList = 
         let rec scan tList =
             match tList with
-            | Var name :: tail ->   let (b, p, t) = symbolTable.[name] 
+            | Var name :: tail ->   let b, p, t = symbolTable[name] 
                                     match b with
                                     | Variable ->   t.Head :: scan tail
-                                    | Function ->   let (tList, fnResult) = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
+                                    | Function ->   let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
                                                     Num fnResult :: scan tList
             | Num (Int value) :: tail ->    Num (Int value) :: scan tail
             | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
@@ -707,7 +681,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
             | [] -> []
             | Var name :: tail ->   let i = indexOf (Var name, pArray)
                                     if (i <> -1) then
-                                        let swap = inParamsToSub.[i]
+                                        let swap = inParamsToSub[i]
                                         swap :: scan tail
                                     else
                                         raise unmatchedParamError
