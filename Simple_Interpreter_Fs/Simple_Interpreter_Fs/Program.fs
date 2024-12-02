@@ -82,57 +82,84 @@ and number =
             number.toFractionHelp(num * Flt 10.0, denom * Int 10)
         else
             (num / Int 10, denom / Int 10)
+
+    static member simplflyFract(input:number) =
+        let inputs = match input with
+                     | Frac (num, denom) -> (num, denom)
+                     | _ -> (0,0)
+        let rec gcdNum (n:int, d:int) =
+            match (n % d) with
+                | 0 -> d
+                | n when n < d = true -> n
+                | _ -> gcdNum ((n % d), d)
+        let rec gcdDenom (n:int, d:int) =
+            match (d % n) with
+                | 0 -> n
+                | d when d < n = true -> d
+                | _ -> gcdDenom ((d % n), n) 
+        let rec gcd (upper, lower) = 
+            if upper >= lower then    
+                let divisor = gcdNum (upper, lower)
+                if divisor < lower = true then gcd(divisor, lower) else divisor
+            else 
+                let divisor = gcdDenom (upper, lower)
+                if divisor < upper = true then gcd(upper, divisor) else divisor
+        let num, denom = inputs
+        if num = 0 then Console.WriteLine("Wrong Type Input")
+        let result = gcd(num,denom)
+        printfn "%A" (num/result, denom/ result) 
+        (num/result, denom/ result) 
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
-                                                   number.toFraction(Int y) + Frac (upper, lower)
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) + Frac (upper, lower)))
                                                | Int y, Frac (upper, lower) ->
-                                                   number.toFraction(Int y) + Frac (upper, lower)   
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) + Frac (upper, lower)))   
                                                | Frac (upper, lower), Flt y ->
-                                                   number.toFraction(Flt y) + Frac (upper, lower)
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) + Frac (upper, lower)))
                                                | Flt y, Frac (upper, lower) ->
-                                                   number.toFraction(Flt y) + Frac (upper, lower)   
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) + Frac (upper, lower)))   
                                                | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)    
+                                                   Frac (number.simplflyFract(Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)))    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower) - number.toFraction(Int y) 
+                                                   Frac (number.simplflyFract(Frac (upper, lower) - number.toFraction(Int y))) 
                                              | Int y, Frac (upper, lower) ->
-                                                   number.toFraction(Int y) - Frac (upper, lower)      
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) - Frac (upper, lower)))      
                                              | Frac (upper, lower), Flt y ->
-                                                   Frac (upper, lower) - number.toFraction(Flt y) 
+                                                   Frac (number.simplflyFract(Frac (upper, lower) - number.toFraction(Flt y))) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   number.toFraction(Flt y) - Frac (upper, lower)
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) - Frac (upper, lower)))
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo) 
+                                                   Frac (number.simplflyFract(Frac (upper*lowerTwo - lower * upperTwo, lower*lowerTwo))) 
                                              | _ -> Flt (number.fltVal x - number.fltVal y)
     static member (*) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x * y)
                                              | Frac (upper, lower), Int y ->
-                                                   number.toFraction(Int y) * Frac (upper, lower)
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) * Frac (upper, lower)))
                                              | Int y, Frac (upper, lower) ->
-                                                   number.toFraction(Int y) * Frac (upper, lower)     
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) * Frac (upper, lower)))     
                                              | Frac (upper, lower), Flt y ->
-                                                   number.toFraction(Flt y) * Frac (upper, lower)
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) * Frac (upper, lower)))
                                              | Flt y, Frac (upper, lower) ->
-                                                   number.toFraction(Flt y) * Frac (upper, lower)      
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) * Frac (upper, lower)))      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper * upperTwo, lower * lowerTwo) 
+                                                   Frac (number.simplflyFract(Frac (upper * upperTwo, lower * lowerTwo))) 
                                              | _ -> Flt (number.fltVal x * number.fltVal y)
     static member (/) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x / y)
                                              | Frac (upper, lower), Int y ->
-                                                   Frac (upper, lower) / number.toFraction(Int y) 
+                                                   Frac (number.simplflyFract(Frac (upper, lower) / number.toFraction(Int y))) 
                                              | Int y, Frac (upper, lower) ->
-                                                   number.toFraction(Int y) / Frac (upper, lower)    
+                                                   Frac (number.simplflyFract(number.toFraction(Int y) / Frac (upper, lower)))    
                                              | Frac (upper, lower), Flt y ->
-                                                   Frac (upper, lower) / number.toFraction(Flt y) 
+                                                   Frac (number.simplflyFract(Frac (upper, lower) / number.toFraction(Flt y))) 
                                              | Flt y, Frac (upper, lower) ->
-                                                   number.toFraction(Flt y) / Frac (upper, lower)      
+                                                   Frac (number.simplflyFract(number.toFraction(Flt y) / Frac (upper, lower)))      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (upper * lowerTwo, lower * upperTwo) 
+                                                   Frac (number.simplflyFract(Frac (upper * lowerTwo, lower * upperTwo))) 
                                              | _ -> Flt (number.fltVal x / number.fltVal y)
     static member (%) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x % y)
@@ -150,19 +177,19 @@ and number =
     static member Pow (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (pown x y)
                                              | Frac (upper, lower), Int y ->
-                                                   number.Pow(Frac (upper, lower), number.toFraction(Int y)) 
+                                                   Frac (number.simplflyFract(number.Pow(Frac (upper, lower), number.toFraction(Int y)))) 
                                              | Int y, Frac (upper, lower) ->                                      
                                                    let power = float upper / float lower
                                                    let result = (Flt (number.fltVal(Int y) ** number.fltVal (Flt power)))
                                                    result.ToInt()
                                              | Frac (upper, lower), Flt y -> 
-                                                   number.Pow(Frac (upper, lower), number.toFraction(Flt y)) 
+                                                   Frac (number.simplflyFract(number.Pow(Frac (upper, lower), number.toFraction(Flt y))))
                                              | Flt y, Frac (upper, lower) ->
                                                    Flt (number.fltVal (Flt y) ** (float upper/float lower))      
                                              | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
                                                    let upperFloat = ((float upper) ** (float upperTwo/float lowerTwo))
                                                    let lowerFloat = ((float lower) ** (float upperTwo/float lowerTwo)) 
-                                                   number.toFraction(Flt upperFloat/Flt lowerFloat) 
+                                                   Frac (number.simplflyFract(number.toFraction(Flt upperFloat/Flt lowerFloat))) 
                                              | _ -> Flt (number.fltVal x ** number.fltVal y)
     static member (~-) (n:number) = match n with
                                     | Int n -> Int -n
@@ -174,12 +201,12 @@ and number =
                                     | Flt n -> Flt +n
     static member Floor (n:number) = match n with
                                      | Flt n -> Flt (Math.Floor(n))
-                                     | Frac (upper, lower) -> number.toFraction(Flt (Math.Floor(float upper/ float lower)))
+                                     | Frac (upper, lower) -> Frac (number.simplflyFract(number.toFraction(Flt (Math.Floor(float upper/ float lower)))))
                                      | _ -> n
     static member Abs (n:number) = match n with
                                    | Int n -> Int (Math.Abs(n))
                                    | Flt n -> Flt (Math.Abs(n))
-                                   | Frac (upper, lower) -> number.toFraction(Flt (float (Math.Abs(upper/lower))))
+                                   | Frac (upper, lower) -> Frac (number.simplflyFract(number.toFraction(Flt (float (Math.Abs(upper/lower))))))
 and trig =
      Sin | Cos | Tan | ASin | ACos | ATan
 and arithmetic =
