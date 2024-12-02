@@ -87,16 +87,14 @@ and number =
         let inputs = match input with
                      | Frac (num, denom) -> (num, denom)
                      | _ -> (0,0)
-        let rec gcdNum (n:int, d:int) =
+        let gcdNum (n:int, d:int) =    
             match (n % d) with
                 | 0 -> d
-                | n when n < d = true -> n
-                | _ -> gcdNum ((n % d), d)
-        let rec gcdDenom (n:int, d:int) =
+                | _ -> n % d
+        let gcdDenom (n:int, d:int) =
             match (d % n) with
                 | 0 -> n
-                | d when d < n = true -> d
-                | _ -> gcdDenom ((d % n), n) 
+                | _ -> d % n
         let rec gcd (upper, lower) = 
             if upper >= lower then    
                 let divisor = gcdNum (upper, lower)
@@ -105,9 +103,7 @@ and number =
                 let divisor = gcdDenom (upper, lower)
                 if divisor < upper = true then gcd(upper, divisor) else divisor
         let num, denom = inputs
-        if num = 0 then Console.WriteLine("Wrong Type Input")
-        let result = gcd(num,denom)
-        printfn "%A" (num/result, denom/ result) 
+        let result = gcd(num, denom)
         (num/result, denom/ result) 
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
@@ -255,8 +251,7 @@ let indexOf (e, array) = Array.IndexOf(array, e)
 let rec printTList (lst:list<terminal>) : list<string> = 
     match lst with
     head::tail -> Console.Write("{0} ",head.ToString())
-                  printTList tail
-                  
+                  printTList tail               
     | [] -> Console.Write("EOL\n")
             []
 let checkAgainstTanList(x:float) =
@@ -311,8 +306,6 @@ let getFloatRadian value =
      number.fltVal(value) * (Math.PI / 180.0)
 let getFloatDegrees value =
     value * (180.0/Math.PI)     
-let getListPart(valueEnd, listIn) =     
-    listIn |> List.take (listIn |> List.tryFindIndex (fun elem -> elem = valueEnd)).Value 
 let lexer input = 
     let rec scan input =
         match input with
@@ -341,12 +334,10 @@ let lexer input =
                                       match iStr with
                                       | '.' :: c :: tail when isdigit c -> let iStr, iVal = scFloat(c :: tail, float iVal, 0.1)
                                                                            Num (Flt iVal) :: scan iStr
-                                      
                                       | _ -> Num (Int iVal) :: scan iStr
         | c :: tail when isletter c -> let iStr, oStr = scName(tail, string c)
                                        let result = isReservedWord oStr
-                                       if result <> Null then result :: scan iStr else Var oStr :: scan iStr
-                                       
+                                       if result <> Null then result :: scan iStr else Var oStr :: scan iStr                             
         | _ -> Console.WriteLine("Unexpected symbol '" + input[0].ToString() + "'")
                raise lexError
     scan (str2lst input)
@@ -424,20 +415,10 @@ let parser tList =
     and NR tList =
         match tList with
         | Arith Sub :: tail -> tail
-        //| Num (Int value) :: tail -> tail
         | Num number :: tail -> tail
-        // | Num (Flt value) :: tail -> tail
-        // | Num (Frac (num,denom)) :: tail -> tail
-        // | Num (Bool value) :: tail -> tail
         | Exp :: tail -> (NR >> Fopt) tail
-        | Log LogN :: tail -> (NR >> Fopt) tail
-        | Log LogOther :: tail -> (NR >> Fopt) tail
-        | Trig Sin :: tail -> (F >> Topt) tail
-        | Trig Cos :: tail -> (F >> Topt) tail
-        | Trig Tan :: tail -> (F >> Topt) tail
-        | Trig ASin :: tail -> (F >> Topt) tail
-        | Trig ACos :: tail -> (F >> Topt) tail
-        | Trig ATan :: tail -> (F >> Topt) tail
+        | Log terminal :: tail -> (NR >> Fopt) tail 
+        | Trig terminal :: tail -> (F >> Topt) tail
         | Lpar :: tail -> match E tail with 
                           | Rpar :: tail -> tail
                           | _ -> raise unclosedParensError
@@ -665,11 +646,9 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                         | _ -> raise NaNError
         | Function ->   match tail.Head with
                         | Lpar   -> let paramsToSub, tailEnd = getP tail.Tail
-                                    let substitutedTList = subP (paramsToSub, p, t)
-                                                                                            
+                                    let substitutedTList = subP (paramsToSub, p, t)                                                             
                                     let fTail, fTVal = E substitutedTList
-                                    (tailEnd, fTVal)
-                                                                               
+                                    (tailEnd, fTVal)                                                                  
                         | _      -> Console.WriteLine(t.Head);
                                     Console.ReadLine() |> ignore
                                     raise parseError
@@ -686,13 +665,13 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
             match tList with
             | Var name :: tail ->   let b, p, t = symbolTable[name] 
                                     match b with
-                                    | Variable ->   t.Head :: scan tail
-                                    | Function ->   let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
-                                                    Num fnResult :: scan tList
-            | Num (Int value) :: tail ->    Num (Int value) :: scan tail
-            | Num (Flt value) :: tail ->    Num (Flt value) :: scan tail
-            | Rpar :: tail ->               []
-            | _ ->  raise parseError
+                                    | Variable -> t.Head :: scan tail
+                                    | Function -> let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
+                                                  Num fnResult :: scan tList
+            | Num (Int value) :: tail -> Num (Int value) :: scan tail
+            | Num (Flt value) :: tail -> Num (Flt value) :: scan tail
+            | Rpar :: tail ->            []
+            | _ -> raise parseError
         let rec getTailEnd tList = 
             match tList with
             | Lpar :: tail ->               getTailEnd tail
@@ -716,7 +695,6 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                         raise unmatchedParamError
             | head :: tail -> head :: scan tail
         scan inTList
-
     L tList
 
 
@@ -750,7 +728,7 @@ let guiIntegration (inputString: string) =
     
 
 
-[<EntryPoint>]
+
 //let main argv  =
 //    Console.WriteLine("Simple Interpreter\n-----------------")
     
@@ -769,6 +747,7 @@ let guiIntegration (inputString: string) =
 //    Console.ReadLine()
 //    0
 
+[<EntryPoint>]
 let rec main' argv  =
     let input:string = getInputString()
     match str2lst input with
