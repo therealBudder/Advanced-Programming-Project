@@ -347,7 +347,7 @@ let lexer input =
                                        let result = isReservedWord oStr
                                        if result <> Null then result :: scan iStr else Var oStr :: scan iStr
                                        
-        | _ -> Console.WriteLine("Unexpected symbol '" + input[0].ToString() + "'")
+        | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
                raise lexError
     scan (str2lst input)
 
@@ -577,7 +577,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tLst, tval = E tail
-                                                                            let (b_type, pList, tList: terminal list) = symbolTable[name]
+                                                                            let (b_type, pList, tList: terminal list) = symbolTable.[name]
                                                                             Console.WriteLine(tList.Head.toNumber().GetType())
                                                                             Console.WriteLine(tval.GetType())
                                                                             if (tList.Head.toNumber().GetType() = tval.GetType()) && (b_type = Variable) then
@@ -658,7 +658,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                raise parseError                          
 
     and FN (name, tail:terminal list) =
-        let b, p, t = symbolTable[name]
+        let b, p, t = symbolTable.[name]
         match b with
         | Variable ->   match t.Head with
                         | Num value -> (tail, value)
@@ -684,7 +684,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     and getP inTList = 
         let rec scan tList =
             match tList with
-            | Var name :: tail ->   let b, p, t = symbolTable[name] 
+            | Var name :: tail ->   let b, p, t = symbolTable.[name] 
                                     match b with
                                     | Variable ->   t.Head :: scan tail
                                     | Function ->   let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
@@ -710,7 +710,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
             | [] -> []
             | Var name :: tail ->   let i = indexOf (Var name, pArray)
                                     if (i <> -1) then
-                                        let swap = inParamsToSub[i]
+                                        let swap = inParamsToSub.[i]
                                         swap :: scan tail
                                     else
                                         raise unmatchedParamError
