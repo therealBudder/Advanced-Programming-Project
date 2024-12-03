@@ -14,6 +14,7 @@ using OxyPlot.Avalonia;
 
 using System.Collections.Generic;
 using static Microsoft.FSharp.Core.ByRefKinds;
+using System.Drawing;
 
 namespace AdProgrammingGUIAvalonia.Views;
 
@@ -100,6 +101,21 @@ public partial class MainView : UserControl
                     InsertSymbol("=");
                 }
                 break;
+            case "sinBtn":
+                {
+                    InsertSymbol("sin");
+                }
+                break;
+            case "cosBtn":
+                {
+                    InsertSymbol("cos");
+                }
+                break;
+            case "tanBtn":
+                {
+                    InsertSymbol("tan");
+                }
+                break;
             case "plot":
                 {
                     CreatePlot();
@@ -107,7 +123,7 @@ public partial class MainView : UserControl
                 break;
             case "resetPlot":
                 {
-                    ResetPlot();
+                    ResetPlotEmptyInput();
                 }
                 break;
         }
@@ -120,9 +136,9 @@ public partial class MainView : UserControl
         var xMinInputBox = this.Find<TextBox>("xMinInput") as TextBox;
         var xMaxInputBox = this.Find<TextBox>("xMaxInput") as TextBox;
         var yExprInputBox = this.Find<TextBox>("yExprInput") as TextBox;
-        var pointCountInputBox = this.Find<TextBox>("pointCountInput") as TextBox;
+        var intervalInputBox = this.Find<TextBox>("intervalInput") as TextBox;
 
-        string xMinInput = "-10", xMaxInput = "10", yExprInput = "y=x", pointCountInput = "2";
+        string xMinInput = "-10", xMaxInput = "10", yExprInput = "y=x", intervalInput = "1";
 
         if (xMinInputBox != null)
         {
@@ -136,31 +152,31 @@ public partial class MainView : UserControl
         {
             yExprInput = yExprInputBox.Text ?? "y=x";
         }
-        if (pointCountInputBox != null)
+        if (intervalInputBox != null)
         {
-            pointCountInput = pointCountInputBox.Text ?? "2";
+            intervalInput = intervalInputBox.Text ?? "1";
         }
 
         if (plot != null)
         {
             //mvm.Points.Add(new DataPoint(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput)));
-            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToInt32(pointCountInput));
+            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToDouble(intervalInput));
             plot.Series[0].ItemsSource = mvm.Points;
             plot.InvalidatePlot(true);
         }
     }
 
-    private void CalculateY(double xMin, double xMax, string yExpr, int points)
+    private void CalculateY(double xMin, double xMax, string yExpr, double interval)
     {
         //double step = (xMax - xMin) / (points - 1);
-        double step;
-        step = (xMax - xMin) / (points - 1);
         //step = Program.number.fltVal(Program.guiIntegration(((xMax - xMin) / (points - 1)).ToString()));
         Program.number y;
+        int step = 1;
         double currentX = xMin;
-        for (int point = 0; point < points; point++)
+
+        while (currentX <= xMax)
         {
-            currentX = (double)(xMin + point * step);
+            Debug.WriteLine(currentX);
             if ((int)currentX == (double)currentX)
             {
                 Program.guiIntegration("x=" + currentX + ".0");
@@ -170,8 +186,36 @@ public partial class MainView : UserControl
                 Program.guiIntegration("x=" + currentX);
             }
             y = Program.guiIntegration("y=" + yExpr);
-            Debug.WriteLine("point: " + point.ToString() + ". x = " + currentX.ToString() + ", y = " + y.ToString());
+            //Debug.WriteLine("point: " + point.ToString() + ". x = " + currentX.ToString() + ", y = " + y.ToString());
             mvm.Points.Add(new DataPoint(Convert.ToDouble(currentX), Program.number.fltVal(y)));
+            currentX = (double)(xMin + interval * step);
+            step++;
+        }
+    }
+
+    private void ResetPlotEmptyInput()
+    {
+        ResetPlot();
+        var plot = this.Find<Plot>("oPlot") as Plot;
+        var xMinInputBox = this.Find<TextBox>("xMinInput") as TextBox;
+        var xMaxInputBox = this.Find<TextBox>("xMaxInput") as TextBox;
+        var yExprInputBox = this.Find<TextBox>("yExprInput") as TextBox;
+        var pointCountInputBox = this.Find<TextBox>("pointCountInput") as TextBox;
+        if (xMinInputBox != null)
+        {
+            xMinInputBox.Text = "";
+        }
+        if (xMaxInputBox != null)
+        {
+            xMaxInputBox.Text = "";
+        }
+        if (yExprInputBox != null)
+        {
+            yExprInputBox.Text = "";
+        }
+        if (pointCountInputBox != null)
+        {
+            pointCountInputBox.Text = "";
         }
     }
 
