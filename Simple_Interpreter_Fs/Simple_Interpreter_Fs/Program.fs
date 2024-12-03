@@ -262,7 +262,11 @@ let checkLogEdgeCase (newBase:float) =
     if (newBase = 1.0) then true else false  
 let checkBetweenATrigValues(x:float) =
     let out = fun input -> (input >= -(1.0) && input <= 1.0)
-    out x 
+    out x
+let getFloatRadian value =
+     number.fltVal(value) * (Math.PI / 180.0)
+let getFloatDegrees value =
+    value * (180.0/Math.PI)        
 let rec scInt(iStr, iVal) =
     match iStr with
     c :: tail when isdigit c -> scInt(tail, 10*iVal+(intVal c))
@@ -271,7 +275,15 @@ and scFloat(iStr, iVal, weight) =
     match iStr with
     c :: tail when isdigit c ->
         scFloat(tail, iVal + weight * floatVal c, weight / 10.0)
-    | _ -> (iStr, iVal)    
+    | _ -> (iStr, iVal)
+    
+/////MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE //                      
+    
+let trigHelperFunction (value, mathsFunction, listInput) =
+    let result = mathsFunction(getFloatRadian value)
+    if Math.Round(float result, 10) = 0.0 then
+         (listInput, Flt 0.0) 
+    else (listInput, Flt (mathsFunction(getFloatRadian value)))
 
 let isReservedWord inString =
     match inString with
@@ -302,10 +314,7 @@ let rec scName(remain : list<char>, word : string) =
     c :: tail when isletterordigit c -> let cStr =  string c
                                         scName(tail, word + cStr)
     | _ -> (remain, word)
-let getFloatRadian value =
-     number.fltVal(value) * (Math.PI / 180.0)
-let getFloatDegrees value =
-    value * (180.0/Math.PI)     
+ 
 let lexer input = 
     let rec scan input =
         match input with
@@ -524,35 +533,23 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Exp :: tail -> let tLst, tval = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let tLst, tval = NR tail
-                              if Math.Round(Math.Sin(getFloatRadian tval), 10) = 0.0 then
-                                (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Sin(getFloatRadian tval)))
+                              trigHelperFunction(tval, Math.Sin, tLst)
         | Trig Cos :: tail -> let tLst, tval = NR tail
-                              if Math.Round(Math.Cos(getFloatRadian tval), 10) = 0.0 then
-                                (tLst, Flt 0.0) 
-                              else (tLst, Flt (Math.Cos(getFloatRadian tval)))                                
+                              trigHelperFunction(tval, Math.Cos, tLst)                             
         | Trig Tan :: tail -> let tLst, tval = NR tail
                               if checkAgainstTanList (number.fltVal(tval) * (Math.PI / 180.0)) = false then
-                                if Math.Round(Math.Tan(getFloatRadian tval), 10) = 0.0 then
-                                  (tLst, Flt 0.0) 
-                                else (tLst, Flt (Math.Tan(getFloatRadian tval)))
+                                trigHelperFunction(tval, Math.Tan, tLst)
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let tLst, tval = NR tail
-                               if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round (Math.Asin(getFloatRadian tval), 10) = 0.0 then
-                                 (tLst, Flt 0.0)
-                                else (tLst, Flt (Math.Asin(getFloatRadian tval)))
+                               if checkBetweenATrigValues (number.fltVal(tval)) then
+                                trigHelperFunction(tval, Math.Asin, tLst)
                                else raise sinUndefinedError
         | Trig ACos :: tail -> let tLst, tval = NR tail
-                               if checkBetweenATrigValues (number.fltVal(tval)) then 
-                                if Math.Round(Math.Acos(getFloatRadian tval), 10) = 0.0 then
-                                 (tLst, Flt 0.0)  
-                                else (tLst, Flt (Math.Acos(getFloatRadian tval)))
+                               if checkBetweenATrigValues (number.fltVal(tval)) then
+                                trigHelperFunction(tval, Math.Acos, tLst)
                                else raise cosUndefinedError 
         | Trig ATan :: tail -> let tLst, tval = NR tail
-                               if Math.Round(Math.Atan(getFloatRadian tval),10) = 0.0 then 
-                                 (tLst, Flt 0.0)  
-                               else (tLst, Flt (Math.Atan(getFloatRadian tval)))
+                               trigHelperFunction(tval, Math.Atan, tLst)
         | Pi :: tail -> (tail, Flt Math.PI)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
@@ -697,8 +694,6 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         scan inTList
     L tList
 
-
-    
 let test (input:string, correctOut) =
     let oList = lexer input
     let out = parseNeval oList
@@ -725,10 +720,6 @@ let guiIntegration (inputString: string) =
     let Out = parseNeval oList
     snd Out
         
-    
-
-
-
 //let main argv  =
 //    Console.WriteLine("Simple Interpreter\n-----------------")
     
