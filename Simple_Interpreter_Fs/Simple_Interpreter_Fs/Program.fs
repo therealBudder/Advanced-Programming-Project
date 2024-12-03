@@ -347,7 +347,7 @@ let lexer input =
         | c :: tail when isletter c -> let iStr, oStr = scName(tail, string c)
                                        let result = isReservedWord oStr
                                        if result <> Null then result :: scan iStr else Var oStr :: scan iStr                             
-        | _ -> Console.WriteLine("Unexpected symbol '" + input[0].ToString() + "'")
+        | _ -> Console.WriteLine("Unexpected symbol '" + input.[0].ToString() + "'")
                raise lexError
     scan (str2lst input)
 
