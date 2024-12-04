@@ -11,10 +11,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         var window = this;
         window.Title = "Calculator";
-        window.MinWidth = 512;
-        window.MinHeight = 380;
-        window.Width = 1024;
-        window.Height = 768;
+        window.MinWidth = 800;
+        window.MinHeight = 450;
+        window.Width = 1280;
+        window.Height = 720;
     }
 
 

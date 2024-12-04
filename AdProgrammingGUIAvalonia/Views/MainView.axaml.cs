@@ -23,6 +23,12 @@ public partial class MainView : UserControl
     MainViewModel mvm = new MainViewModel();
     List<DataPoint> points = new List<DataPoint>();
 
+    enum ViewMode 
+    {
+        initial,
+        trig
+    }
+
     public MainView()
     {
         InitializeComponent();
@@ -121,6 +127,16 @@ public partial class MainView : UserControl
                     CreatePlot();
                 }
                 break;
+            case "initialView":
+                {
+                    ChangeViewMode(ViewMode.initial);
+                }
+                break;
+            case "trigView":
+                {
+                    ChangeViewMode(ViewMode.trig);
+                }
+                break;
             case "resetPlot":
                 {
                     ResetPlotEmptyInput();
@@ -133,37 +149,76 @@ public partial class MainView : UserControl
     {
         ResetPlot();
         var plot = this.Find<Plot>("oPlot") as Plot;
-        var xMinInputBox = this.Find<TextBox>("xMinInput") as TextBox;
-        var xMaxInputBox = this.Find<TextBox>("xMaxInput") as TextBox;
         var yExprInputBox = this.Find<TextBox>("yExprInput") as TextBox;
         var intervalInputBox = this.Find<TextBox>("intervalInput") as TextBox;
+        var xAxis = this.Find<LinearAxis>("plotXAxis") as LinearAxis;
 
-        string xMinInput = "-10", xMaxInput = "10", yExprInput = "y=x", intervalInput = "1";
+        string xMinInput = "-10", xMaxInput = "10", yExprInput = "y=x", intervalInput = "0.1";
+        double xMin = -10, xMax = 10;
 
-        if (xMinInputBox != null)
-        {
-            xMinInput = xMinInputBox.Text ?? "-10";
-        }
-        if (xMaxInputBox != null)
-        {
-            xMaxInput = xMaxInputBox.Text ?? "10";
-        }
         if (yExprInputBox != null)
         {
             yExprInput = yExprInputBox.Text ?? "y=x";
         }
         if (intervalInputBox != null)
         {
-            intervalInput = intervalInputBox.Text ?? "1";
+            intervalInput = intervalInputBox.Text ?? "0.1";
+        }
+        if (xAxis != null)
+        {
+
+            double xAxisLength = xAxis.InternalAxis.ActualMaximum - xAxis.InternalAxis.ActualMinimum;
+            xMin = xAxis.InternalAxis.ActualMinimum - xAxisLength;
+            xMax = xAxis.InternalAxis.ActualMaximum + xAxisLength;
+            Debug.WriteLine("Min: " + xMin + ", Max: " + xMax);
         }
 
         if (plot != null)
         {
-            //mvm.Points.Add(new DataPoint(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput)));
-            CalculateY(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput), yExprInput, Convert.ToDouble(intervalInput));
+            CalculateY(xMin, xMax, yExprInput, Convert.ToDouble(intervalInput));
+            //mvm.Points.Add(new DataPoint(Convert.ToDouble(xMinInput), Convert.ToDouble(xMaxInput)));            
             plot.Series[0].ItemsSource = mvm.Points;
             plot.InvalidatePlot(true);
         }
+    }
+
+    private void ChangeViewMode(ViewMode mode)
+    {
+        var plot = this.Find<Plot>("oPlot") as Plot;
+        var xAxis = this.Find<LinearAxis>("plotXAxis") as LinearAxis;
+        var yAxis = this.Find<LinearAxis>("plotYAxis") as LinearAxis;
+
+        if (xAxis != null)
+        {
+            if (mode == ViewMode.initial)
+            {
+                xAxis.Minimum = -40;
+                xAxis.Maximum = 40;
+            }
+            else if (mode == ViewMode.trig)
+            {
+                xAxis.Minimum = -720;
+                xAxis.Maximum = 720;
+            }
+        }
+        if (yAxis != null)
+        {
+            if (mode == ViewMode.initial)
+            {
+                yAxis.Minimum = -20;
+                yAxis.Maximum = 20;
+            } 
+            else if (mode == ViewMode.trig)
+            {
+                yAxis.Minimum = -2;
+                yAxis.Maximum = 2;
+            }
+        }
+        if (plot != null)
+        {
+            plot.ResetAllAxes();
+        }
+
     }
 
     private void CalculateY(double xMin, double xMax, string yExpr, double interval)
@@ -176,18 +231,26 @@ public partial class MainView : UserControl
 
         while (currentX <= xMax)
         {
-            Debug.WriteLine(currentX);
-            if ((int)currentX == (double)currentX)
+            //Debug.WriteLine(currentX);
+            try
             {
-                Program.guiIntegration("x=" + currentX + ".0");
+                if ((int)currentX == (double)currentX)
+                {
+                    Program.guiIntegration("x=" + currentX + ".0");
+                }
+                else
+                {
+                    Program.guiIntegration("x=" + currentX);
+                }
+                y = Program.guiIntegration("y=" + yExpr);
+                //Debug.WriteLine("point: " + point.ToString() + ". x = " + currentX.ToString() + ", y = " + y.ToString());
+                mvm.Points.Add(new DataPoint(Convert.ToDouble(currentX), Program.number.fltVal(y)));
             }
-            else
+            catch (Exception ex)
             {
-                Program.guiIntegration("x=" + currentX);
+                Debug.WriteLine(ex.ToString());
             }
-            y = Program.guiIntegration("y=" + yExpr);
-            //Debug.WriteLine("point: " + point.ToString() + ". x = " + currentX.ToString() + ", y = " + y.ToString());
-            mvm.Points.Add(new DataPoint(Convert.ToDouble(currentX), Program.number.fltVal(y)));
+
             currentX = (double)(xMin + interval * step);
             step++;
         }
@@ -200,22 +263,22 @@ public partial class MainView : UserControl
         var xMinInputBox = this.Find<TextBox>("xMinInput") as TextBox;
         var xMaxInputBox = this.Find<TextBox>("xMaxInput") as TextBox;
         var yExprInputBox = this.Find<TextBox>("yExprInput") as TextBox;
-        var pointCountInputBox = this.Find<TextBox>("pointCountInput") as TextBox;
+        var intervalInputBox = this.Find<TextBox>("intervalInput") as TextBox;
         if (xMinInputBox != null)
         {
-            xMinInputBox.Text = "";
+            xMinInputBox.Text = null;
         }
         if (xMaxInputBox != null)
         {
-            xMaxInputBox.Text = "";
+            xMaxInputBox.Text = null;
         }
         if (yExprInputBox != null)
         {
-            yExprInputBox.Text = "";
+            yExprInputBox.Text = null;
         }
-        if (pointCountInputBox != null)
+        if (intervalInputBox != null)
         {
-            pointCountInputBox.Text = "";
+            intervalInputBox.Text = null;
         }
     }
 
