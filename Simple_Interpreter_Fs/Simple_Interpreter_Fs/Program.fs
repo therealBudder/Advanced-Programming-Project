@@ -670,16 +670,15 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                     | Variable -> t.Head :: scan tail
                                     | Function -> let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
                                                   Num fnResult :: scan tList
-            | Num (Int value) :: tail -> Num (Int value) :: scan tail
-            | Num (Flt value) :: tail -> Num (Flt value) :: scan tail
+            // | Num (Int value) :: tail -> Num (Int value) :: scan tail
+            | Num value :: tail -> Num value :: scan tail
             | Rpar :: tail ->            []
             | _ -> raise parseError
         let rec getTailEnd tList = 
             match tList with
             | Lpar :: tail ->               getTailEnd tail
             | Var name :: tail ->           getTailEnd tail
-            | Num (Int value) :: tail ->    getTailEnd tail
-            | Num (Flt value) :: tail ->    getTailEnd tail
+            | Num number :: tail ->         getTailEnd tail
             | Rpar :: tail ->               tail
             | _ ->  printTList tList |> ignore
                     raise parseError
