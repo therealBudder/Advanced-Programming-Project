@@ -443,8 +443,9 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     let rec L tList = (R >> Lopt) tList         
     and Lopt (tList, value: number) =
         match tList with
-        | End :: tail -> Console.WriteLine(tail)
-                         L tail
+        | End :: tail -> match tail with
+                         | [] -> (tList, value)
+                         | _ -> L tail
         | Logical And :: tail -> let tLst, tval = R tail
                                  let andval = 
                                      match value.ToBool(), tval.ToBool() with
