@@ -28,6 +28,7 @@ type terminal =
     | Null
     | Pi
     | Abs
+    | End
     | DataType of dataType
     | Relational of relational
     | Logical of logical
@@ -338,6 +339,7 @@ let lexer input =
         | '{'::tail -> Lbrace:: scan tail
         | '}'::tail -> Rbrace:: scan tail
         | '='::tail -> Assign:: scan tail
+        | ';'::tail -> End:: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c -> let iStr, iVal = scInt(tail, intVal c)
                                       match iStr with
@@ -441,6 +443,8 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     let rec L tList = (R >> Lopt) tList         
     and Lopt (tList, value: number) =
         match tList with
+        | End :: tail -> Console.WriteLine(tail)
+                         L tail
         | Logical And :: tail -> let tLst, tval = R tail
                                  let andval = 
                                      match value.ToBool(), tval.ToBool() with
@@ -556,8 +560,8 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tLst, tval = E tail
                                                                             let (b_type, pList, tList: terminal list) = symbolTable.[name]
-                                                                            Console.WriteLine(tList.Head.toNumber().GetType())
-                                                                            Console.WriteLine(tval.GetType())
+                                                                            // Console.WriteLine(tList.Head.toNumber().GetType())
+                                                                            // Console.WriteLine(tval.GetType())
                                                                             if (tList.Head.toNumber().GetType() = tval.GetType()) && (b_type = Variable) then
                                                                                 symbolTable <- symbolTable.Remove(name)
                                                                                 symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
@@ -565,9 +569,9 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                             else
                                                                                 Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, tList.Head.toNumber().TypeToString(), tval.TypeToString())
                                                                                 raise typeError
-        | Var name :: Assign :: tail -> let tval = snd (E tail)
+        | Var name :: Assign :: tail -> let tLst, tval = E tail
                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                        (tail, tval)
+                                        (tLst, tval)
         | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
                                                          symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
                                                          (tLst, tval)
@@ -620,17 +624,18 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                                     raise unclosedBracesError                            
         | For :: Lpar :: Arith Sub :: Num (Int count) :: tail -> raise countLessThanOneException
         
-        | DataType Boolean :: Var name :: Assign :: tail -> let tLst,tVal = E tail
+        | DataType Boolean :: Var name :: Assign :: tail -> let tLst, tVal = E tail
                                                             if tVal.GetType() = (Bool false).GetType() then
                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
                                                               (tLst, tVal)
                                                             else
                                                               Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
                                                               raise typeError 
-        | Lpar :: tail -> let tList, tval = E tail
-                          match tList with 
-                          | Rpar :: tail -> (tList, tval)
-                          | _ -> raise unclosedParensError                                                             
+        | Lpar :: tail -> let tLst, tval = E tail
+                          match tLst with 
+                          | Rpar :: tail -> (tail, tval)
+                                            
+                          | _ -> raise unclosedParensError
         | _ -> Console.WriteLine("Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError                          
