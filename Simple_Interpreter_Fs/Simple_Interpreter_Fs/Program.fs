@@ -524,7 +524,6 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                                          else raise DenominatorisZeroError                                                                                 
         | DataType Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
                                                                                                         else raise DenominatorisZeroError 
-        | Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> (tail, Frac (num, denom))
         | Abs :: tail -> let tLst, tval = NR tail
                          (tLst, number.Abs(tval))
         | Log LogN :: tail -> let tLst, tval = NR tail
