@@ -600,10 +600,10 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                                     symbolTable <- symbolTable.Remove(name)
                                                                                     symbolTable <- symbolTable.Add(name, (Function, paramList, tList))                                                                        
                                                                                     (tList, Int 0)
-        | Func :: Var name :: Lpar ::tail ->    let paramList, tList = getPSignature ([], tail)
-                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tList))
+        | Func :: Var name :: Lpar ::tail ->    let paramList, tLst = getPSignature ([], tail)
+                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tLst))
 
-                                                (tList, Int 0)
+                                                (tLst, Int 0)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
 
