@@ -670,9 +670,21 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                             symbolTable.addBool(name, (Variable, [], [Num tval]))
                                                             (tLst, tval)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Func :: Var name :: Lpar :: tail when symbolTable.contains(name) ->    let paramList, tList = getPSignature ([], tail)
-                                                                                 symbolTable.update(name, (Function, paramList, tList))                                                                        
-                                                                                 (tList, Int 0)
+        | Func :: Var name :: Lpar :: tail when symbolTable.contains(name) ->   let paramList, tList = getPSignature ([], tail)
+                                                                                let tArr = Array.ofList tList
+                                                                                let endPosition = indexOf(End, tArr)
+                                                                                let fBody = tList[0..(endPosition-1)]
+                                                                                 
+                                                                                if endPosition <> -1 then
+                                                                                    let fBody = tList[0..(endPosition-1)]
+                                                                                    let t = tList[endPosition..]
+                                                                                    symbolTable.update(name, (Function, paramList, fBody))                                                                        
+                                                                                    (t, Int 0)
+                                                                                 else
+                                                                                    symbolTable.update(name, (Function, paramList, tList))                                                                        
+                                                                                    (tList, Int 0)
+
+                                                                                 
         | Func :: Var name :: Lpar ::tail ->    let paramList, tLst = getPSignature ([], tail)
                                                 symbolTable.addAuto(name, (Function, paramList, tLst))
 
@@ -727,6 +739,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | _ -> Console.WriteLine("Non-Parameter specified in declaration - Unexpected syntax at:")
                for t in tList do Console.Write(t.ToString() + " ")
                raise parseError
+
     and getP inTList = 
         let rec scan tList =
             match tList with
