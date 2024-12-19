@@ -217,6 +217,10 @@ and logical =
 and dataType =
     Integer | Float | Fraction | Boolean | Auto
 
+
+    
+
+
 //Errors
 let lexError = Exception("invalid symbol in expression")
 let varError = Exception("incorrect var assignment")
@@ -439,7 +443,83 @@ let parser tList =
     L tList
 
 //let mutable variables = Map.empty   //acts as the symbol table currently (may want revision, very rudimentary)
-let mutable symbolTable = Map.empty
+//let mutable symbolTable = Map.empty
+
+type symbolTableWrapper() = 
+    let mutable internalSymbolTable = Map.empty;
+    member this.get(id) = 
+        Console.WriteLine("using symbolTableWrapper to get");
+        let (b,p,t) = internalSymbolTable.[id]
+        (b,p,t)
+
+    member this.addAuto(name, (b, p, t:terminal list)) = 
+        Console.WriteLine("using symbolTableWrapper to add");
+        internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+
+    member this.addInt(name, (b, p, t:terminal list)) = 
+        Console.WriteLine("using symbolTableWrapper to add");
+        if t.Head.toNumber().GetType() = (Int 0).GetType() then
+            internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+        else
+             Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, (Int 0).TypeToString(), t.Head.toNumber().TypeToString())
+             raise typeError
+
+    member this.addFloat(name, (b, p, t:terminal list)) = 
+        Console.WriteLine("using symbolTableWrapper to add");
+        if t.Head.toNumber().GetType() = (Flt 0.0).GetType() then
+            internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+        else
+             Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, (Flt 0.0).TypeToString(), t.Head.toNumber().TypeToString()) 
+             raise typeError
+
+    member this.addFrac(name, (b, p, t:terminal list)) = 
+        Console.WriteLine("using symbolTableWrapper to add");
+        if t.Head.toNumber().GetType() = (Frac (0,1)).GetType() then
+            internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+        else
+             Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, (Frac (0,1)).TypeToString(), t.Head.toNumber().TypeToString())
+             raise typeError
+
+    member this.addBool(name, (b, p, t:terminal list)) = 
+        Console.WriteLine("using symbolTableWrapper to add");
+        if t.Head.toNumber().GetType() = (Bool false).GetType() then
+            internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+        else
+             Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, (Bool false).TypeToString(), t.Head.toNumber().TypeToString())
+             raise typeError
+
+    member this.remove(name) = 
+        Console.WriteLine("using symbolTableWrapper to remove");
+        internalSymbolTable <- internalSymbolTable.Remove(name)
+
+    member this.contains(name) =
+        Console.WriteLine("using symbolTableWrapper to check presence");
+        internalSymbolTable.ContainsKey(name)
+
+    member this.update(name, (b, p, t:terminal list)) =
+        let (b',p',t':terminal list) = this.get(name)
+        if b' = b then  //Catch assigning Function to Variable or vice versa
+            if b' = Variable then
+                if t'.Head.toNumber().GetType() = t.Head.toNumber().GetType() then
+                    internalSymbolTable <- internalSymbolTable.Remove(name)
+                    internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+                else
+                    Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, t'.Head.toNumber().TypeToString(), t.Head.toNumber().TypeToString())
+                    raise typeError
+            else    // else b' = Function
+                internalSymbolTable <- internalSymbolTable.Remove(name)
+                internalSymbolTable <- internalSymbolTable.Add(name, (b, p, t))
+        else
+            Console.WriteLine("Binding {0} expected BindingType {1} but got BindingType {2}", name, b', b)
+            raise bindingTypeError
+
+    member this.clear() =
+        internalSymbolTable <- Map.empty
+    
+    member this.toString() =
+        internalSymbolTable
+
+let symbolTable = new symbolTableWrapper() 
 
 let parseNeval tList =                         //Because L=R, then R=E and so on, tList executes from bottom to top (NR -> Fopt -> Topt -> Eopt -> Ropt -> Lopt)
     let rec L tList = (R >> Lopt) tList         
@@ -565,58 +645,43 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Pi :: tail -> (tail, Flt Math.PI)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tLst, tval = E tail
-                                                                            let (b_type, pList, tList: terminal list) = symbolTable.[name]
-                                                                            // Console.WriteLine(tList.Head.toNumber().GetType())
-                                                                            // Console.WriteLine(tval.GetType())
-                                                                            if (tList.Head.toNumber().GetType() = tval.GetType()) && (b_type = Variable) then
-                                                                                symbolTable <- symbolTable.Remove(name)
-                                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                                                (tLst, tval)
-                                                                            else
-                                                                                Console.WriteLine("Variable {0} expected type {1} but got type {2}", name, tList.Head.toNumber().TypeToString(), tval.TypeToString())
-                                                                                raise typeError
+        | Var name :: Assign :: tail when symbolTable.contains(name) ->  let tLst, tval = E tail
+                                                                         symbolTable.update(name, (Variable, [], [Num tval]))
+                                                                         (tLst, tval)
+
         | Var name :: Assign :: tail -> let tLst, tval = E tail
-                                        symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                        symbolTable.addAuto(name, (Variable, [], [Num tval]))
                                         (tLst, tval)
+
         | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
-                                                         symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
+                                                         symbolTable.addAuto(name, (Variable, [], [Num tval]))
                                                          (tLst, tval)
         | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = E tail
-                                                            if tval.GetType() = (Int 0).GetType() then
-                                                                symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                                (tLst, tval)
-                                                            else
-                                                                Console.WriteLine("Value "+ tval.ToString() + " not an integer")
-                                                                raise typeError
+                                                            symbolTable.addInt(name, (Variable, [], [Num tval]))
+                                                            (tLst, tval)    
+                                                            
         | DataType Float :: Var name :: Assign :: tail -> let tLst,tval = E tail
-                                                          if tval.GetType() = (Flt 0.0).GetType() then
-                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                               (tLst, tval)
-                                                          else
-                                                              Console.WriteLine("Value " + tval.ToString() + " not a float")
-                                                              raise typeError
+                                                          symbolTable.addFloat(name, (Variable, [], [Num tval]))
+                                                          (tLst, tval)
         | DataType Fraction :: Var name :: Assign :: tail -> let tLst,tval = E tail
-                                                             if tval.GetType() = (Frac (0,1)).GetType() then
-                                                               symbolTable <- symbolTable.Add(name, (Variable, [], [Num tval]))
-                                                               (tLst, tval)
-                                                             else
-                                                               Console.WriteLine("Value " + tval.ToString() + " not an fraction number")
-                                                               raise typeError
+                                                             symbolTable.addFrac(name, (Variable, [], [Num tval]))
+                                                             (tLst, tval)
+        | DataType Boolean :: Var name :: Assign :: tail -> let tLst, tval = E tail
+                                                            symbolTable.addBool(name, (Variable, [], [Num tval]))
+                                                            (tLst, tval)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Func :: Var name :: Lpar :: tail when symbolTable.ContainsKey(name) ->    let paramList, tList = getPSignature ([], tail)
-                                                                                    symbolTable <- symbolTable.Remove(name)
-                                                                                    symbolTable <- symbolTable.Add(name, (Function, paramList, tList))                                                                        
-                                                                                    (tList, Int 0)
+        | Func :: Var name :: Lpar :: tail when symbolTable.contains(name) ->    let paramList, tList = getPSignature ([], tail)
+                                                                                 symbolTable.update(name, (Function, paramList, tList))                                                                        
+                                                                                 (tList, Int 0)
         | Func :: Var name :: Lpar ::tail ->    let paramList, tLst = getPSignature ([], tail)
-                                                symbolTable <- symbolTable.Add(name, (Function, paramList, tLst))
+                                                symbolTable.addAuto(name, (Function, paramList, tLst))
 
                                                 (tLst, Int 0)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        | Var name :: tail when symbolTable.ContainsKey(name) -> FN (name, tail)
+        | Var name :: tail when symbolTable.contains(name) -> FN (name, tail)
 
-        | Var name :: tail when not (symbolTable.ContainsKey(name)) -> Console.WriteLine("Undefined variable or function " + name)
-                                                                       raise undefinedVarError
+        | Var name :: tail when not (symbolTable.contains(name)) -> Console.WriteLine("Undefined variable or function " + name)
+                                                                    raise undefinedVarError
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
         | For :: Lpar :: Num (Int count) :: Rpar :: Lbrace :: tail ->   if count < 1 then
                                                                             raise countLessThanOneException
@@ -631,13 +696,6 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                                     raise unclosedBracesError                            
         | For :: Lpar :: Arith Sub :: Num (Int count) :: tail -> raise countLessThanOneException
         
-        | DataType Boolean :: Var name :: Assign :: tail -> let tLst, tVal = E tail
-                                                            if tVal.GetType() = (Bool false).GetType() then
-                                                              symbolTable <- symbolTable.Add(name, (Variable, [], [Num tVal]))
-                                                              (tLst, tVal)
-                                                            else
-                                                              Console.WriteLine("Value " + tVal.ToString() + " not an fraction number")
-                                                              raise typeError 
         | Lpar :: tail -> let tLst, tval = E tail
                           match tLst with 
                           | Rpar :: tail -> (tail, tval)
@@ -648,7 +706,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                raise parseError                          
 
     and FN (name, tail:terminal list) =
-        let b, p, t = symbolTable.[name]
+        let (b, p, t) = symbolTable.get(name)
         match b with
         | Variable ->   match t.Head with
                         | Num value -> (tail, value)
@@ -672,7 +730,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     and getP inTList = 
         let rec scan tList =
             match tList with
-            | Var name :: tail ->   let b, p, t = symbolTable.[name] 
+            | Var name :: tail ->   let b, p, t = symbolTable.get(name)
                                     match b with
                                     | Variable -> t.Head :: scan tail
                                     | Function -> let tList, fnResult = FN (name, tail)    //Duplicated symbolTable call, questionable efficiency???
@@ -754,9 +812,9 @@ let rec main' argv  =
     let input:string = getInputString()
     match str2lst input with
     | 'e' :: 'x' :: 'i' :: 't' :: tail -> 0
-    | '\\' :: 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail -> symbolTable <- Map.empty
-                                                         Console.WriteLine("Cleared symbol table")
-                                                         main' argv
+    | 'c' :: 'l' :: 'e' :: 'a' :: 'r' :: tail ->    symbolTable.clear()
+                                                    Console.WriteLine("Cleared symbol table")
+                                                    main' argv
     | _ -> let oList = lexer input
            let sList = printTList oList;
 
@@ -766,7 +824,7 @@ let rec main' argv  =
            Console.WriteLine("Result = {0}", snd Out)
            //testInputs
            Console.WriteLine("Symbol table:")
-           Console.WriteLine(symbolTable)
+           Console.WriteLine(symbolTable.toString())
            //for entry in symbolTable do
                //Console.Write("{0} {1} = {2} ", entry.Value.TypeToString(), entry.Key, entry.Value.ToString())
            // Console.WriteLine(variables)
