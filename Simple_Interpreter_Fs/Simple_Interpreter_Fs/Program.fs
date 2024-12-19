@@ -211,7 +211,7 @@ and arithmetic =
 and log =
     LogN | LogOther
 and relational =
-    Equal | Greater | Less
+    Equal | Greater | Less | GreaterEqu | LessEqu
 and logical =
     And | Or | Not
 and dataType =
@@ -333,6 +333,8 @@ let lexer input =
         | '!'::tail -> Logical Not :: scan tail
         | '&'::'&'::tail -> Logical And :: scan tail
         | '|'::'|'::tail -> Logical Or :: scan tail
+        | '<'::'='::tail -> Relational LessEqu :: scan tail
+        | '>'::'='::tail -> Relational GreaterEqu :: scan tail
         | '<'::tail -> Relational Less :: scan tail
         | '>'::tail -> Relational Greater :: scan tail
         | '='::'='::tail -> Relational Equal :: scan tail
@@ -473,6 +475,12 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Relational Greater :: tail -> let tLst, tval = E tail
                                         let isGreater = if number.fltVal(value) > number.fltVal(tval) then Bool true else Bool false
                                         Ropt (tLst, isGreater)
+        | Relational LessEqu :: tail -> let tLst, tval = E tail
+                                        let isLessEqu = if number.fltVal(value) <= number.fltVal(tval) then Bool true else Bool false
+                                        Ropt (tLst, isLessEqu)
+        | Relational GreaterEqu :: tail ->  let tLst, tval = E tail
+                                            let isGreaterEqu = if number.fltVal(value) >= number.fltVal(tval) then Bool true else Bool false
+                                            Ropt (tLst, isGreaterEqu)
         | _ -> (tList, value)               // <Ropt>     ::= "==" <E> <Ropt> | "<" <E> <Ropt> | ">" <E> <Ropt> | <empty>          
     and E tList = (T >> Eopt) tList
     and Eopt (tList, value) = 
@@ -556,8 +564,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                trigHelperFunction(tval, Math.Atan, tLst)
         | Pi :: tail -> (tail, Flt Math.PI)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
-        //NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW 
-        //---------------------------------------------------------------------------------------------------------------------------------------------------------
+
         | Var name :: Assign :: tail when symbolTable.ContainsKey(name) ->  let tLst, tval = E tail
                                                                             let (b_type, pList, tList: terminal list) = symbolTable.[name]
                                                                             // Console.WriteLine(tList.Head.toNumber().GetType())
@@ -616,8 +623,8 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                         else
                                                                             for i = 1 to (count-1) do
                                                                                 Console.WriteLine(tail)
-                                                                                Console.WriteLine(E tail)
-                                                                            let tLst, tval = E tail
+                                                                                Console.WriteLine(L tail)
+                                                                            let tLst, tval = L tail
                                                                             match tLst with
                                                                             | Rbrace :: tail -> (tail, tval)
                                                                             | _ ->  printTList tLst |> ignore
@@ -649,7 +656,7 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Function ->   match tail.Head with
                         | Lpar   -> let paramsToSub, tailEnd = getP tail.Tail
                                     let substitutedTList = subP (paramsToSub, p, t)                                                             
-                                    let fTail, fTVal = E substitutedTList
+                                    let fTail, fTVal = L substitutedTList
                                     (tailEnd, fTVal)                                                                  
                         | _      -> Console.WriteLine(t.Head);
                                     Console.ReadLine() |> ignore
