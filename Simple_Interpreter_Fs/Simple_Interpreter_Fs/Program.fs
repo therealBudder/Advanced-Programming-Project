@@ -708,6 +708,27 @@ let test (input:string, correctOut) =
 let testInputs =
     printfn "Tests Start"
     if
+        test ("5*3+(2*3-2)/2+6", Int 23) &&
+        test ("9-3-2", Int 4) &&
+        test ("10/3", Int 3) &&
+        test ("10/3.0", Flt 3.3333333) &&
+        test ("10%3", Int 1) &&
+        test ("10--2", Int 12) &&
+        test ("-2+10", Int 8) &&
+        test ("3*5^(-1+3)-2^2*-3", Int 87) &&
+        test ("-7%3", Int -1) &&
+        test ("2*3^2", Int 18) &&
+        test ("3*5^(-1+3)-2^-2*-3", Flt 75.75) &&
+        test ("(((3*2--2)))", Int 8) &&
+        test ("(((3*2--2))", Int 8) && // Actual Result should be UnclosedParensError.
+        test ("-((3*5-2*3))", Int -9) &&
+        test ("int x = 3;(2*x)-x^2*5", Int -39) &&
+        test ("int x = 3;(2*x)-x^2*5/2", Int -16) &&
+        test ("int x = 3;(2*x)-x^2*(5/2)", Int -12) &&
+        test ("int x = 3;(2*x)-x^2*5/2.0", Flt -16.5) &&
+        test ("int x = 3;(2*x)-x^2*5%2", Int 5) &&
+        test ("int x = 3;(2*x)-x^2*(5%2)", Int -3) &&
+        test ("-3^2", Int 9) &&
         test ("15+987", Int 1002) &&
         test ("987-15", Int 972) &&
         test ("15*987", Int 14805) &&
