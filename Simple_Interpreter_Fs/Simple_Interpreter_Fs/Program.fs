@@ -290,13 +290,13 @@ let AtrigHelperFunction (value, mathsFunction, listInput) =
     let result = mathsFunction(number.fltVal value)
     if Math.Round(float result, 10) = 0.0 then
          (listInput, Flt 0.0) 
-    else (listInput, Flt (mathsFunction(number.fltVal value)))
+    else (listInput, (Flt (getFloatDegrees(mathsFunction(number.fltVal value)))))
 
 let trigHelperFunction (value, mathsFunction, listInput) =
     let result = mathsFunction(getFloatRadian value)
     if Math.Round(float result, 10) = 0.0 then
          (listInput, Flt 0.0) 
-    else (listInput, Flt (mathsFunction(getFloatRadian value)))
+    else (listInput, Flt  (mathsFunction(getFloatRadian value)))
 
 let isReservedWord inString =
     match inString with
