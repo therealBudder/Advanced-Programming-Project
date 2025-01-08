@@ -79,10 +79,12 @@ and number =
      Frac (number.intVal(num),number.intVal(denom))
      
     static member toFractionHelp(num, denom) =
-        if num % Int 10 <> Flt 0.0 then
-            number.toFractionHelp(num * Flt 10.0, denom * Int 10)
+        let numF = floor(num)
+        if Math.Round(number.fltVal(num),10) - Math.Round(number.fltVal(numF), 1) > 0.0 then
+        // if num % Int 10 <> Flt 0.0 then
+            number.toFractionHelp(num * Flt 10, denom * Int 10)
         else
-            (num / Int 10, denom / Int 10)
+            (num, denom)
 
     static member simplflyFract(input:number) =
         let inputs = match input with
@@ -109,15 +111,15 @@ and number =
     static member (+) (x: number, y: number) = match (x, y) with
                                                | Int x, Int y -> Int (x + y)
                                                | Frac (upper, lower), Int y ->
-                                                   Frac (number.simplflyFract(number.toFraction(Int y) + Frac (upper, lower)))
+                                                   (number.toFraction(Int y) + Frac (upper, lower))
                                                | Int y, Frac (upper, lower) ->
-                                                   Frac (number.simplflyFract(number.toFraction(Int y) + Frac (upper, lower)))   
+                                                   number.toFraction(Int y) + Frac (upper, lower)   
                                                | Frac (upper, lower), Flt y ->
-                                                   Frac (number.simplflyFract(number.toFraction(Flt y) + Frac (upper, lower)))
+                                                   number.toFraction(Flt y) + Frac (upper, lower)
                                                | Flt y, Frac (upper, lower) ->
-                                                   Frac (number.simplflyFract(number.toFraction(Flt y) + Frac (upper, lower)))   
+                                                   number.toFraction(Flt y) + Frac (upper, lower)  
                                                | Frac (upper, lower), Frac (upperTwo, lowerTwo) ->
-                                                   Frac (number.simplflyFract(Frac (upper*lowerTwo + lower * upperTwo, lower*lowerTwo)))    
+                                                   Frac (number.simplflyFract(Frac ((upper*lowerTwo) + (lower * upperTwo), lower*lowerTwo)))    
                                                | _ -> Flt (number.fltVal x + number.fltVal y)
     static member (-) (x:number, y:number) = match (x, y) with
                                              | Int x, Int y -> Int (x - y)
@@ -209,7 +211,7 @@ and trig =
 and arithmetic =
     Add | Sub | Mul | Div | FlrDiv
 and log =
-    LogN | LogOther
+    LogNat | LogNum
 and relational =
     Equal | Greater | Less | GreaterEqu | LessEqu
 and logical =
@@ -292,8 +294,8 @@ let trigHelperFunction (value, mathsFunction, listInput) =
 
 let isReservedWord inString =
     match inString with
-    | "ln"  -> Log LogN
-    | "log" -> Log LogOther
+    | "ln"  -> Log LogNat
+    | "log" -> Log LogNum
     | "asin" -> Trig ASin
     | "acos" -> Trig ACos
     | "atan" -> Trig ATan
@@ -365,9 +367,9 @@ let getInputString() : string =
 
 // Grammar in BNF:
 
-//<trig> ::= "Sin" | "Cos" | "Tan" | "Asin" | "Acos" | "Atan"
+//<trig> ::= "Sin" | "Cos" | "Tan"l | "Asin" | "Acos" | "Atan"
 //<number> ::= "Flt" | "Int" | "Bool" | "Frac" 
-//<log> ::= "logN" | "logOther"
+//<log> ::= "LogNat" | "logNum"
 
 // version 1.0
 // <L>        ::= <R> <Lopt>
@@ -615,13 +617,13 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                                                                                                         else raise DenominatorisZeroError 
         | Abs :: tail -> let tLst, tval = NR tail
                          (tLst, number.Abs(tval))
-        | Log LogN :: tail -> let tLst, tval = NR tail
-                              if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
-                              else raise logInputError                  
-        | Log LogOther :: tail -> let tLst, tval = NR tail
-                                  if checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))
-                                  then (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
-                                  else raise logInputError
+        | Log LogNat :: tail -> let tLst, tval = NR tail
+                                if checkPositive (number.fltVal(tval)) then (tLst, Flt (Math.Log(number.fltVal(tval))))
+                                else raise logInputError                  
+        | Log LogNum :: tail -> let tLst, tval = NR tail
+                                if checkPositive (number.fltVal(tval)) && (checkPositive (number.fltVal(snd (NR tLst)))) && not(checkLogEdgeCase (number.fltVal(tval)))
+                                then (tLst.Tail, Flt (Math.Log(number.fltVal(snd (NR tLst)), number.fltVal(tval)))) 
+                                else raise logInputError
         | Exp :: tail -> let tLst, tval = NR tail
                          (tLst, Flt (Math.Exp(number.fltVal(tval))))                  
         | Trig Sin :: tail -> let tLst, tval = NR tail
@@ -786,6 +788,17 @@ let test (input:string, correctOut) =
 let testInputs =
     printfn "Tests Start"
     if
+        // Arithmetic Testing
+        test ("-2", Int -2) &&
+        test ("-3^2", Int 9) &&
+        test ("15+987", Int 1002) &&
+        test ("987-15", Int 972) &&
+        test ("15*987", Int 14805) &&
+        test ("5/2", Int 2) &&
+        test ("5.0/2", Flt 2.5) &&
+        test ("1156.55+1.2", Flt 1157.75) &&
+        test ("9%4", Int 1) &&
+        test ("-2*3^2", Int -18) &&
         test ("5*3+(2*3-2)/2+6", Int 23) &&
         test ("9-3-2", Int 4) &&
         test ("10/3", Int 3) &&
@@ -796,27 +809,20 @@ let testInputs =
         test ("3*5^(-1+3)-2^2*-3", Int 87) &&
         test ("-7%3", Int -1) &&
         test ("2*3^2", Int 18) &&
-        test ("3*5^(-1+3)-2^-2*-3", Flt 75.75) &&
+        test ("3*5^(-1+3)-2^-2*-3", Flt 75) &&
+        test ("3*5^(-1+3)-2.0^-2*-3", Flt 75.75) &&
         test ("(((3*2--2)))", Int 8) &&
         test ("(((3*2--2))", Int 8) && // Actual Result should be UnclosedParensError.
         test ("-((3*5-2*3))", Int -9) &&
+        // Variable Testing
         test ("int x = 3;(2*x)-x^2*5", Int -39) &&
         test ("int x = 3;(2*x)-x^2*5/2", Int -16) &&
         test ("int x = 3;(2*x)-x^2*(5/2)", Int -12) &&
         test ("int x = 3;(2*x)-x^2*5/2.0", Flt -16.5) &&
         test ("int x = 3;(2*x)-x^2*5%2", Int 5) &&
-        test ("int x = 3;(2*x)-x^2*(5%2)", Int -3) &&
-        test ("-3^2", Int 9) &&
-        test ("15+987", Int 1002) &&
-        test ("987-15", Int 972) &&
-        test ("15*987", Int 14805) &&
-        test ("5/2", Int 2) &&
-        test ("5.0/2", Flt 2.5) &&
-        test ("1156.55+1.2", Flt 1157.75) &&
-        test ("9%4", Int 1) &&
-        test ("-2*3^2", Int -18)
+        test ("int x = 3;(2*x)-x^2*(5%2)", Int -3) 
         then printfn "All tests passed"
-        else printfn "Some of the tests failed"
+    else printfn "Some of the tests failed"
         
 let guiIntegration (inputString: string) = 
     let oList = lexer inputString
