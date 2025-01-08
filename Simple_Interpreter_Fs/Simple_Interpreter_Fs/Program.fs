@@ -611,9 +611,9 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Num (Int value) :: tail -> (tail, Int value)
         | Num (Flt value) :: tail -> (tail, Flt value)
         | Num (Bool value) :: tail -> (tail, Bool value)
-        | DataType Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail ->  if denom <> 0 then (tail, Frac (num, denom))
+        | DataType Fraction :: Num (Int num) :: Arith Div :: Num (Int denom) :: tail ->  if denom <> 0 then (tail, Frac (number.simplflyFract(Frac (num, denom))))
                                                                                          else raise DenominatorisZeroError                                                                                 
-        | DataType Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (num, denom))
+        | DataType Fraction :: Lpar :: Num (Int num) :: Arith Div :: Num (Int denom) :: Rpar :: tail -> if denom <> 0 then (tail, Frac (number.simplflyFract(Frac (num, denom))))
                                                                                                         else raise DenominatorisZeroError 
         | Abs :: tail -> let tLst, tval = NR tail
                          (tLst, number.Abs(tval))
