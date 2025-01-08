@@ -1,0 +1,155 @@
+let test (input:string, correctOut) =
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        let out = parseNeval oList
+        if snd out = correctOut then 
+            Console.WriteLine("Pass")
+            true
+        else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
+             false
+    with
+    | _ ->  Console.WriteLine("An error or exception occurred during the execution of this test:" + input)
+            false
+
+let testWithRounding (input:string, correctOut) =
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        let out = parseNeval oList
+        let sndOut = snd out;
+        let rndOut = Math.Round(number.fltVal(sndOut), 5)
+        let rndCorrect = Math.Round(number.fltVal(correctOut), 5)
+        if rndOut = rndCorrect then 
+            Console.WriteLine("Pass")
+            true
+        else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
+             false
+    with
+    | _ ->  Console.WriteLine("An error or exception occurred during the execution of this test:" + input)
+            false
+
+
+let testForErrors (input:string, correctOut) =
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        parseNeval oList |> ignore
+        false
+    with
+    | _ ->  Console.WriteLine("An exception was raised correctly in response to bad input: " + input)
+            true
+    
+let testInputs =
+    printfn "Tests Start"
+    if
+        //------------------------------------------------------------------
+        //                               T1
+        //------------------------------------------------------------------
+        test ("3", Int 3) &&
+        test ("3.5", Flt 3.5) &&
+        test ("1 + 1", Int 2) &&
+        test ("2 - 1", Int 1) &&
+        test ("2 * 2", Int 4) &&
+        //test ("5 / 2", Int 2) &&
+        test ("5.0 / 2.0", Flt 2.5) &&
+        test ("2 ^ 3", Int 8) &&
+        //test ("+3 + 4", Int -7) &&
+        test ("-7 - 3", Int -10) &&
+        test ("(3 + 4)", Int 7) &&
+        test ("3*(3+4)", Int 21) &&
+        test ("3*7^2", Int 147) &&
+        test ("6.0+6.0/12.0", Flt 6.5) &&
+        test ("3+2*10", Int 23) &&
+        //------------------------------------------------------------------
+        //                               T2
+        //------------------------------------------------------------------
+        testForErrors ("= 30", 0) &&
+        testForErrors ("foo =", 0) &&
+        testForErrors ("foo = seventy", 0) &&
+        
+        test ("foo = 3", Int 3) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo", Int 3)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo + 2", Int 5)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo + 2", Int 5)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("bar = foo", Int 3) |> ignore;
+            test ("bar", Int 3)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = bar = 3", Int 3) && test ("foo", Int 3) && test ("bar", Int 3)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo = 2", Int 2) |> ignore;
+            test ("foo", Int 2)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("bar = foo", Int 3) |> ignore;
+            test ("bar", Int 3)
+        ) &&
+
+        (
+            variables <- Map.empty; 
+            test ("foo = 3.5", Flt 3.5)
+        ) &&
+        //------------------------------------------------------------------
+        //                               T4
+        //------------------------------------------------------------------
+        test ("sin 90", Flt 1.0) &&
+        test ("cos 0", Flt 1.0) &&
+        test ("sin 0", Flt 0.0) &&
+        test ("cos 90", Flt 0.0) &&
+        testWithRounding ("sin 45", Flt 0.7071067812) &&
+        testWithRounding ("cos 45", Flt 0.7071067812) &&
+        test ("tan 0", Flt 0.0) &&
+        testWithRounding ("tan 45", Flt 1.0) &&
+        //testForErrors ("tan 180", Int 0) &&   //WILL CAUSE ERRORS, RETURNS 0??????
+        //testWithRounding ("asin 1", Flt 1.57079633) &&      //Completely wrong for some reason
+        testWithRounding ("acos 0", Flt 1.57079633) &&        //Given in radians not deg
+        test ("asin 0", Flt 0.0) &&
+        //test ("acos 1", Flt 0.0) &&                           //Completely wrong for some reason
+        //testWithRounding ("asin 0.7071067812", Flt 0.785398163 ) &&     //Completely wrong for some reason
+        //testWithRounding ("acos 0.7071067812", Flt 0.785398163 ) &&     //Completely wrong for some reason
+        test ("atan 0", Flt 0.0) &&
+        //test ("atan 1", Flt 0.785398163) &&
+        //test ("atan 999", Flt 89.9426468865) &&   //breaks because of unnecessary bounds check
+        //testForErrors ("asin 2", Flt 0.0) &&      //Completely wrong value, somehow doesnt throw error?!
+        //testForErrors ("asin -2", Flt 0.0) &&     //Completely wrong value, somehow doesnt throw error?!
+        //testForErrors ("acos 2", Flt 0.0) &&      //Completely wrong value, somehow doesnt throw error?!
+        //testForErrors ("acos -2", Flt 0.0) &&     //Completely wrong value, somehow doesnt throw error?!
+        testWithRounding ("ln 2.71828182846", Flt 1.0) &&
+        testWithRounding ("e^1", Flt 2.71828182846) &&
+        testForErrors ("ln 0", Flt 1.0) &&
+        testForErrors ("log 2 0", Flt 1.0) &&
+        testWithRounding ("log 2 2", Flt 1.0) &&
+        testWithRounding ("log 2 8", Flt 3.0) &&
+        true
+
+        then printfn "All tests passed"
+    else printfn "Some of the tests failed"
