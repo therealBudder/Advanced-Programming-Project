@@ -286,6 +286,12 @@ and scFloat(iStr, iVal, weight) =
     
 /////MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE // MORE HERE //                      
     
+let AtrigHelperFunction (value, mathsFunction, listInput) =
+    let result = mathsFunction(number.fltVal value)
+    if Math.Round(float result, 10) = 0.0 then
+         (listInput, Flt 0.0) 
+    else (listInput, Flt (mathsFunction(number.fltVal value)))
+
 let trigHelperFunction (value, mathsFunction, listInput) =
     let result = mathsFunction(getFloatRadian value)
     if Math.Round(float result, 10) = 0.0 then
@@ -636,14 +642,14 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
                               else raise tanUndefinedError
         | Trig ASin :: tail -> let tLst, tval = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then
-                                trigHelperFunction(tval, Math.Asin, tLst)
+                                AtrigHelperFunction(tval, Math.Asin, tLst)
                                else raise sinUndefinedError
         | Trig ACos :: tail -> let tLst, tval = NR tail
                                if checkBetweenATrigValues (number.fltVal(tval)) then
-                                trigHelperFunction(tval, Math.Acos, tLst)
+                                AtrigHelperFunction(tval, Math.Acos, tLst)
                                else raise cosUndefinedError 
         | Trig ATan :: tail -> let tLst, tval = NR tail
-                               trigHelperFunction(tval, Math.Atan, tLst)
+                               AtrigHelperFunction(tval, Math.Atan, tLst)
         | Pi :: tail -> (tail, Flt Math.PI)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
