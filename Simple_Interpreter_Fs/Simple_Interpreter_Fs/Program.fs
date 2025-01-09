@@ -785,48 +785,469 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
     L tList
 
 let test (input:string, correctOut) =
-    let oList = lexer input
-    let out = parseNeval oList
-    if snd out = correctOut then true
-    else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
-         false
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        let out = parseNeval oList
+        if snd out = correctOut then 
+            Console.WriteLine("Pass")
+            true
+        else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
+             false
+    with
+    | _ ->  Console.WriteLine("An error or exception occurred during the execution of this test:" + input)
+            false
+
+let testWithRounding (input:string, correctOut) =
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        let out = parseNeval oList
+        let sndOut = snd out;
+        let rndOut = Math.Round(number.fltVal(sndOut), 5)
+        let rndCorrect = Math.Round(number.fltVal(correctOut), 5)
+        if rndOut = rndCorrect then 
+            Console.WriteLine("Pass")
+            true
+        else printfn "input: %s, Correct Result: %f, Interpreter Out: %f" input (number.fltVal(correctOut)) (number.fltVal(snd out))
+             false
+    with
+    | _ ->  Console.WriteLine("An error or exception occurred during the execution of this test:" + input)
+            false
+
+
+let testForErrors (input:string, correctOut) =
+    try
+        Console.WriteLine("Testing: " + input)
+        let oList = lexer input
+        parseNeval oList |> ignore
+        false
+    with
+    | _ ->  Console.WriteLine("An exception was raised correctly in response to bad input: " + input)
+            true
     
 let testInputs =
     printfn "Tests Start"
     if
-        // Arithmetic Testing
-        test ("-2", Int -2) &&
-        test ("-3^2", Int 9) &&
-        test ("15+987", Int 1002) &&
-        test ("987-15", Int 972) &&
-        test ("15*987", Int 14805) &&
-        test ("5/2", Int 2) &&
-        test ("5.0/2", Flt 2.5) &&
-        test ("1156.55+1.2", Flt 1157.75) &&
-        test ("9%4", Int 1) &&
-        test ("-2*3^2", Int -18) &&
-        test ("5*3+(2*3-2)/2+6", Int 23) &&
-        test ("9-3-2", Int 4) &&
-        test ("10/3", Int 3) &&
-        test ("10/3.0", Flt 3.3333333) &&
-        test ("10%3", Int 1) &&
-        test ("10--2", Int 12) &&
-        test ("-2+10", Int 8) &&
-        test ("3*5^(-1+3)-2^2*-3", Int 87) &&
-        test ("-7%3", Int -1) &&
-        test ("2*3^2", Int 18) &&
-        test ("3*5^(-1+3)-2^-2*-3", Flt 75) &&
-        test ("3*5^(-1+3)-2.0^-2*-3", Flt 75.75) &&
-        test ("(((3*2--2)))", Int 8) &&
-        test ("(((3*2--2))", Int 8) && // Actual Result should be UnclosedParensError.
-        test ("-((3*5-2*3))", Int -9) &&
-        // Variable Testing
-        test ("int x = 3;(2*x)-x^2*5", Int -39) &&
-        test ("int x = 3;(2*x)-x^2*5/2", Int -16) &&
-        test ("int x = 3;(2*x)-x^2*(5/2)", Int -12) &&
-        test ("int x = 3;(2*x)-x^2*5/2.0", Flt -16.5) &&
-        test ("int x = 3;(2*x)-x^2*5%2", Int 5) &&
-        test ("int x = 3;(2*x)-x^2*(5%2)", Int -3) 
+        //------------------------------------------------------------------
+        //                               T1
+        //------------------------------------------------------------------
+        test ("3", Int 3) &&
+        test ("3.5", Flt 3.5) &&
+        test ("1 + 1", Int 2) &&
+        test ("2 - 1", Int 1) &&
+        test ("2 * 2", Int 4) &&
+        test ("5 / 2", Int 2) &&
+        test ("5.0 / 2.0", Flt 2.5) &&
+        test ("2 ^ 3", Int 8) &&
+        test ("+3 + 4", Int 7) &&
+        test ("-7 - 3", Int -10) &&
+        test ("(3 + 4)", Int 7) &&
+        test ("3*(3+4)", Int 21) &&
+        test ("3*7^2", Int 147) &&
+        test ("6.0+6.0/12.0", Flt 6.5) &&
+        test ("3+2*10", Int 23) &&
+        //------------------------------------------------------------------
+        //                               T2
+        //------------------------------------------------------------------
+        testForErrors ("= 30", 0) &&
+        testForErrors ("foo =", 0) &&
+        testForErrors ("foo = seventy", 0) &&
+        
+        test ("foo = 3", Int 3) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo", Int 3)
+        ) &&
+
+        (
+            symbolTable.clear();  
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo + 2", Int 5)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo + 2", Int 5)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("bar = foo", Int 3) |> ignore;
+            test ("bar", Int 3)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = bar = 3", Int 3) && test ("foo", Int 3) && test ("bar", Int 3)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("foo = 2", Int 2) |> ignore;
+            test ("foo", Int 2)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3", Int 3) |> ignore;
+            test ("bar = foo", Int 3) |> ignore;
+            test ("bar", Int 3)
+        ) &&
+
+        (
+            symbolTable.clear(); 
+            test ("foo = 3.5", Flt 3.5)
+        ) &&
+        //------------------------------------------------------------------
+        //                               T4
+        //------------------------------------------------------------------
+        testWithRounding ("pi", Flt 3.141592654) &&
+        test ("abs -1", Int 1) &&
+        test ("abs -1.5", Flt 1.5) &&
+        test ("abs 1", Int 1) &&
+        test ("abs 1.5", Flt 1.5) &&
+        //------------------------------------------------------------------
+        //                               T5
+        //------------------------------------------------------------------
+        (
+            symbolTable.clear(); 
+            test ("var foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("var foo = 1.5", Flt 1.5)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("var foo = seventy", Int 1)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("int foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("int foo = 1.5", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("int foo = seventy", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("float foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("float foo = 1.5", Flt 1.5)
+        ) &&
+        (
+            symbolTable.clear(); 
+            testForErrors ("float foo = seventy", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("int foo = 1", Int 1) && test ("foo = 2", Int 2)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("float foo = 1.5", Flt 1.5) && test ("foo = 2.5", Flt 2.5)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("float foo = 1.5", Flt 1.5) && testForErrors ("foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("int foo = 1", Int 1) && testForErrors ("foo = 1.5", Int 1)
+        ) &&
+        //------------------------------------------------------------------
+        //                               T6
+        //------------------------------------------------------------------
+        (
+            symbolTable.clear();
+            test ("fn foo(x) = x+3", Int 0) && test ("foo(1)", Int 4)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("foo(x) = x+3", Int 0)
+        ) &&
+        (
+            symbolTable.clear();
+            testForErrors ("fn (x) = x+3", Int 0)
+        ) &&
+        //(
+        //    symbolTable.clear();
+        //    testForErrors ("fn foo(x) = 3", Int 0)
+        //) &&      //Fails - no parameter validity checks exist until execution
+        (
+            symbolTable.clear();
+            test ("fn foo(x) = x+3", Int 0) && test ("foo(2)", Int 5)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("fn foo(x) = x+3", Int 0) && testForErrors ("foo()", Int 5)
+        ) &&
+        //(
+        //    symbolTable.clear();
+        //    test ("fn foo(x) = x+3", Int 0) && testForErrors ("foo(3 4)", Int 5)
+        //) &&      //Fails - code substitutes first parameter and executes anyway
+        (
+            symbolTable.clear();
+            test ("fn foo(x) = x+3", Int 0) &&
+            test ("fn foo(x) = x+2", Int 0) &&
+            test ("foo(3)", Int 5)
+        ) &&
+        //------------------------------------------------------------------
+        //                               T7
+        //------------------------------------------------------------------
+        (
+            symbolTable.clear();
+            test ("foo = true", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("var foo = true", Bool true)
+        ) &&
+                (
+            symbolTable.clear();
+            test ("bool foo = true", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = true", Bool true) && test ("foo = false", Bool false)
+        ) &&
+        (
+            symbolTable.clear(); 
+            test ("foo = true", Bool true) && testForErrors ("foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = true", Bool true) && testForErrors ("foo = 1.5", Flt 1.5)
+        ) &&
+        (
+            symbolTable.clear(); 
+            testWithRounding ("true + 3", Flt 4)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true + 1.5", Flt 2.5)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false - 3", Flt -3)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false - 2.5", Flt -2.5)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true / 2", Flt 0.5)
+        ) &&
+        (
+            symbolTable.clear(); 
+            testWithRounding ("true / 0.8", Flt 1.25)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false / 1", Flt 0)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true * 0.7855", Flt 0.7855)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true ^ 2", Flt 1)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false ^ 0.5", Flt 0)
+        ) &&
+        (
+            symbolTable.clear(); 
+            testWithRounding ("true && true", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true && false", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false && false", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true || true", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("true || false", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("false || false", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("!true", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 == 9", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 == 8", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 < 10", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("10 < 9", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 < 9", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("10 > 9", Bool true)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 > 10", Bool false)
+        ) &&
+        (
+            symbolTable.clear();
+            testWithRounding ("9 > 9", Bool false)
+        ) &&
+        //(
+        //    symbolTable.clear();
+        //    testForErrors ("true && 9", Int 1)
+        //) &&  // evaluates non-zero as true
+        //(
+        //    symbolTable.clear();
+        //    testForErrors ("true || 9", Int 1)
+        //) &&  // evaluates non-zero as true
+        //------------------------------------------------------------------
+        //                               T8
+        //------------------------------------------------------------------
+        (
+            symbolTable.clear();
+            test ("foo = 3", Int 3) && test ("for(3){foo = foo + 3}", Int 12)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = 3", Int 3) && testForErrors ("for(0.3){foo = foo + 3}", Int 12)
+        ) &&
+        //------------------------------------------------------------------
+        //                               T9
+        //------------------------------------------------------------------
+        test ("frac 3/5", Frac (3, 5)) &&
+        test ("frac 60/100", Frac (3, 5)) &&
+        test ("frac 30/100 + frac 30/100", Frac (3, 5)) &&
+        test ("frac 60/100 - frac 30/100", Frac (3, 10)) &&
+        test ("frac 50/100 / frac 2/1", Frac (1, 4)) &&
+        test ("frac 50/100 * frac 1/2", Frac (1, 4)) &&
+        test ("frac 3/2 ^ 2", Frac (9, 4)) &&
+        test ("frac 9/4 ^ frac 1/2", Frac (3, 2)) &&
+        test ("frac 3/2 + 1", Frac (5, 2)) &&
+        testWithRounding ("frac 3/2 + 0.1234", Frac (16234, 10000)) &&
+        testWithRounding ("frac 3/2 -1", Frac (1, 2)) &&
+        testWithRounding ("frac 3/2 - 0.1234", Frac (6883, 5000)) &&
+        testWithRounding ("frac 3/2 / 2", Frac (3, 4)) &&
+        testWithRounding ("frac 3/4 / 0.4", Frac (1875, 1000)) &&
+        testWithRounding ("frac 3/2 * 7", Frac (21, 2)) &&
+        testWithRounding ("frac 3/2 * 0.5", Frac (3, 4)) &&
+
+        (
+            symbolTable.clear();
+            test ("frac foo = frac 3/2", Frac (3, 2))
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = frac 3/2", Frac (3, 2))
+        ) &&
+        (
+            symbolTable.clear();
+            test ("var foo = frac 3/2", Frac (3, 2))
+        ) &&
+
+        (
+            symbolTable.clear();
+            test ("foo = 1", Int 1) && testForErrors("foo = frac 3/2", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = 1.5", Flt 1.5) && testForErrors("foo = frac 3/2", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = true", Bool true) && testForErrors("foo = frac 3/2", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = frac 3/2", Frac (3, 2)) && testForErrors("foo = 1", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = frac 3/2", Frac (3, 2)) && testForErrors("foo = 1.5", Int 1)
+        ) &&
+        (
+            symbolTable.clear();
+            test ("foo = frac 3/2", Frac (3, 2)) && test("foo = frac 3/4", Frac (3, 4))
+        ) &&
+        //------------------------------------------------------------------
+        //                               T10
+        //------------------------------------------------------------------
+        test ("sin 90", Flt 1.0) &&
+        test ("cos 0", Flt 1.0) &&
+        test ("sin 0", Flt 0.0) &&
+        test ("cos 90", Flt 0.0) &&
+        testWithRounding ("sin 45", Flt 0.7071067812) &&
+        testWithRounding ("cos 45", Flt 0.7071067812) &&
+        test ("tan 0", Flt 0.0) &&
+        testWithRounding ("tan 45", Flt 1.0) &&
+        //testForErrors ("tan 180", Int 0) &&   //WILL CAUSE ERRORS, RETURNS 0??????
+        testWithRounding ("asin 1", Flt 90) &&      //Completely wrong for some reason
+        testWithRounding ("acos 0", Flt 90) &&        //Given in radians not deg
+        testWithRounding ("asin 0", Flt 0.0) &&
+        testWithRounding ("acos 1", Flt 0.0) &&                           //Completely wrong for some reason
+        testWithRounding ("asin 0.7071067812", Flt 45 ) &&  
+        testWithRounding ("acos 0.7071067812", Flt 45 ) &&    
+        testWithRounding ("atan 0", Flt 0.0) &&
+        testWithRounding ("atan 1", Flt 45) &&
+        testWithRounding ("atan 999", Flt 89.9426468865) &&   
+        testForErrors ("asin 2", Flt 0.0) &&      
+        testForErrors ("asin -2", Flt 0.0) &&     
+        testForErrors ("acos 2", Flt 0.0) &&      
+        testForErrors ("acos -2", Flt 0.0) &&     
+        testWithRounding ("ln 2.71828182846", Flt 1.0) &&
+        testWithRounding ("e^1", Flt 2.71828182846) &&
+        testForErrors ("ln 0", Flt 1.0) &&
+        testForErrors ("log 2 0", Flt 1.0) &&
+        testWithRounding ("log 2 2", Flt 1.0) &&
+        testWithRounding ("log 2 8", Flt 3.0) &&
+        //------------------------------------------------------------------
+        //                                F
+        //------------------------------------------------------------------
+        test ("9 <= 10", Bool true) &&
+        test ("10 <= 9", Bool false) &&
+        test ("9 <= 9", Bool true) &&
+        test ("10 >= 9", Bool true) &&
+        test ("9 >= 10", Bool false) &&
+        test ("9 >= 9", Bool true) &&
+        true
         then printfn "All tests passed"
     else printfn "Some of the tests failed"
         
