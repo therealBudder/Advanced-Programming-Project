@@ -253,7 +253,7 @@ let isblank c = Char.IsWhiteSpace c
 let isdigit c = Char.IsDigit c
 let isletter c = Char.IsLetter c
 let isletterordigit c = Char.IsLetterOrDigit c
-let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
+//let tanUndefinedList = [for i in -1000.0 .. 1000.0 do yield ((Math.PI/2.0) + Math.PI*i)]
 let indexOf (e, array) = Array.IndexOf(array, e)
 let rec printTList (lst:list<terminal>) : list<string> = 
     match lst with
@@ -261,8 +261,11 @@ let rec printTList (lst:list<terminal>) : list<string> =
                   printTList tail               
     | [] -> Console.Write("EOL\n")
             []
+
 let checkAgainstTanList(x:float) =
-    tanUndefinedList |> List.contains x
+    x - (Math.PI / 2.0) % 180.0 = 0
+
+    //tanUndefinedList |> List.contains x
 let checkPositive (x:float) =
     if x > 0.0 then true else false
 let checkLogEdgeCase (newBase:float) =
@@ -1218,11 +1221,11 @@ let testInputs =
         testWithRounding ("cos 45", Flt 0.7071067812) &&
         test ("tan 0", Flt 0.0) &&
         testWithRounding ("tan 45", Flt 1.0) &&
-        //testForErrors ("tan 180", Int 0) &&   //WILL CAUSE ERRORS, RETURNS 0??????
-        testWithRounding ("asin 1", Flt 90) &&      //Completely wrong for some reason
-        testWithRounding ("acos 0", Flt 90) &&        //Given in radians not deg
+        testForErrors ("tan 90", Int 0) &&   
+        testWithRounding ("asin 1", Flt 90) &&     
+        testWithRounding ("acos 0", Flt 90) &&      
         testWithRounding ("asin 0", Flt 0.0) &&
-        testWithRounding ("acos 1", Flt 0.0) &&                           //Completely wrong for some reason
+        testWithRounding ("acos 1", Flt 0.0) &&                          
         testWithRounding ("asin 0.7071067812", Flt 45 ) &&  
         testWithRounding ("acos 0.7071067812", Flt 45 ) &&    
         testWithRounding ("atan 0", Flt 0.0) &&
