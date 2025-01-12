@@ -660,28 +660,28 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | E :: tail -> (tail, Flt Math.E)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        | Var name :: Assign :: tail when symbolTable.contains(name) ->  let tLst, tval = E tail
+        | Var name :: Assign :: tail when symbolTable.contains(name) ->  let tLst, tval = L tail
                                                                          symbolTable.update(name, (Variable, [], [Num tval]))
                                                                          (tLst, tval)
 
-        | Var name :: Assign :: tail -> let tLst, tval = E tail
+        | Var name :: Assign :: tail -> let tLst, tval = L tail
                                         symbolTable.addAuto(name, (Variable, [], [Num tval]))
                                         (tLst, tval)
 
-        | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = E tail
+        | DataType Auto :: Var name :: Assign :: tail -> let tLst,tval = L tail
                                                          symbolTable.addAuto(name, (Variable, [], [Num tval]))
                                                          (tLst, tval)
-        | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = E tail
+        | DataType Integer :: Var name :: Assign :: tail -> let tLst,tval = L tail
                                                             symbolTable.addInt(name, (Variable, [], [Num tval]))
                                                             (tLst, tval)    
                                                             
-        | DataType Float :: Var name :: Assign :: tail -> let tLst,tval = E tail
+        | DataType Float :: Var name :: Assign :: tail -> let tLst,tval = L tail
                                                           symbolTable.addFloat(name, (Variable, [], [Num tval]))
                                                           (tLst, tval)
-        | DataType Fraction :: Var name :: Assign :: tail -> let tLst,tval = E tail
+        | DataType Fraction :: Var name :: Assign :: tail -> let tLst,tval = L tail
                                                              symbolTable.addFrac(name, (Variable, [], [Num tval]))
                                                              (tLst, tval)
-        | DataType Boolean :: Var name :: Assign :: tail -> let tLst, tval = E tail
+        | DataType Boolean :: Var name :: Assign :: tail -> let tLst, tval = L tail
                                                             symbolTable.addBool(name, (Variable, [], [Num tval]))
                                                             (tLst, tval)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1259,9 +1259,15 @@ let testInputs =
     else printfn "Some of the tests failed"
         
 let guiIntegration (inputString: string) = 
-    let oList = lexer inputString
-    let Out = parseNeval oList
-    snd Out
+    match str2lst inputString with
+    | 'c'::'l'::'e'::'a'::'r'::tail ->  symbolTable.clear()
+                                        let oList = lexer "0"
+                                        let Out = parseNeval oList
+                                        snd Out
+    | _ ->  let oList = lexer inputString
+            let Out = parseNeval oList
+            snd Out
+    
         
 //let main argv  =
 //    Console.WriteLine("Simple Interpreter\n-----------------")
