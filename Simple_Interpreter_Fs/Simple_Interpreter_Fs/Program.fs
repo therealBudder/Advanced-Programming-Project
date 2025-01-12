@@ -27,6 +27,7 @@ type terminal =
     | Trig of trig
     | Null
     | Pi
+    | E
     | Abs
     | End
     | DataType of dataType
@@ -312,6 +313,7 @@ let isReservedWord inString =
     | "cos" -> Trig Cos
     | "tan" -> Trig Tan
     | "pi" -> Pi
+    | "e" -> E
     | "abs" -> Abs
     | "int" -> DataType Integer
     | "float" -> DataType Float
@@ -654,6 +656,8 @@ let parseNeval tList =                         //Because L=R, then R=E and so on
         | Trig ATan :: tail -> let tLst, tval = NR tail
                                AtrigHelperFunction(tval, Math.Atan, tLst)
         | Pi :: tail -> (tail, Flt Math.PI)
+        
+        | E :: tail -> (tail, Flt Math.E)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
         | Var name :: Assign :: tail when symbolTable.contains(name) ->  let tLst, tval = E tail
