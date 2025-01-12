@@ -163,6 +163,10 @@ public partial class MainView : UserControl
         if (intervalInputBox != null)
         {
             intervalInput = intervalInputBox.Text ?? "0.1";
+            if (intervalInput == "0")
+            {
+                intervalInput = "0.1";
+            }
         }
         if (xAxis != null)
         {
