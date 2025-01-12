@@ -17,7 +17,7 @@
 	<!--<Button HorizontalAlignment="Center">Calculate</Button>-->
 	<Grid ShowGridLines="False" ColumnDefinitions="*, *, *" RowDefinitions="150, *, *, *">
 		<Grid MaxHeight="150" ShowGridLines="False" RowDefinitions="50, 50, 50">
-			<Button Name="reset" Grid.Row="0" HorizontalAlignment="Left" Margin="10" Click="ButtonClicked">Reset</Button>
+			<Button Name="reset" Grid.Row="0" HorizontalAlignment="Left" Margin="10" Click="ButtonClicked">Clear Input</Button>
 			<Button Name="compute" IsDefault="True" Grid.Row="0" HorizontalAlignment="Right" Margin="10" Click="ButtonClicked">Compute</Button>
 			<TextBox Name="equationInput"  Grid.Row="1" Margin="10" Height="20" Watermark="{Binding EquationInputText}" ToolTip.Tip="Input equation then press enter or click compute" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
 			<TextBox Name="result" Grid.Row="2" Margin="10" Height="20" Watermark="{Binding ResultText}" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"></TextBox>
@@ -57,10 +57,10 @@
 			</oxy:Plot>
 			<TextBox Name="yExprInput" Grid.Column="0" Grid.Row="2" Margin="10" Watermark="Y =" HorizontalContentAlignment="Right"></TextBox>
 			<TextBox Name="intervalInput" Grid.Column="1" Grid.Row="2" Margin="10" Watermark="Interval" HorizontalContentAlignment="Right"></TextBox>
-			<Button Name="plot" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Plot</Button>
+			<Button Name="plot" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Plot Graph</Button>
 			<Button Name="initialView" Grid.Column="3" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Initial View</Button>
 			<Button Name="trigView" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Trig View</Button>
-			<Button Name="resetPlot" Grid.Column="5" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Reset</Button>
+			<Button Name="resetPlot" Grid.Column="5" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Click="ButtonClicked">Reset Plot</Button>
 		</Grid>
 	</Grid>
 </UserControl>
